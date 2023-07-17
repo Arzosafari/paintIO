@@ -1,7 +1,7 @@
 import java.awt.*;
 import java.util.ArrayList;
 
-public abstract class Player implements Comparable<Player> {
+ abstract class Player implements Comparable<Player> {
     int x,y,dx,dy;
     private Color color;
     private ArrayList<Tile> ownedTiles=new ArrayList<>();
@@ -53,7 +53,7 @@ public abstract class Player implements Comparable<Player> {
     }
     abstract void move();
 
-    public void die(){
+     void die(){
         isAlive=false;
         ArrayList<Tile> ownedTilesCopy=(ArrayList<Tile>)ownedTiles.clone() ;
         ArrayList<Tile> contestedTilesCopy=(ArrayList<Tile>)contestedTile.clone();
@@ -112,7 +112,7 @@ public abstract class Player implements Comparable<Player> {
     String getName(){
         return name;
     }
-    boolean getAlive(){
+    Boolean getAlive(){
         return isAlive;
     }
     public void setAlive(boolean alive){

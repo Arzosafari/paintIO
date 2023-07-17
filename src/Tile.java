@@ -1,6 +1,5 @@
 import java.awt.*;
-
-public class Tile {
+ class Tile {
     private Player owner;
     private Color color=Color.WHITE;
     private Player contestedOwner;
