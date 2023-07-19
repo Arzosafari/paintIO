@@ -1,22 +1,28 @@
+
 import java.awt.*;
 import java.awt.event.KeyEvent;
 
-public class HumanPlayer extends Player{
+
+public class HumanPlayer extends Player {
+
     private int nextKey;
-    public HumanPlayer(int height, int width, Color color,String name) {
-        super(height, width, color);
-        this.name=name;
+    void setNextKey(int nextKey) {
+        this.nextKey = nextKey;
     }
-    void setNextKey(int nextKey){
-        this.nextKey=nextKey;
-    }
+
+
 
     @Override
-    void move() {
-        x+=dx;
-        y+=dy;
-
+    public void move(){
+        x += dx;
+        y += dy;
     }
+    HumanPlayer(int height, int width, Color color, String nameOfPlayer) {
+        super(height, width, color);
+        this.nameOfPlayer = nameOfPlayer;
+    }
+
+
     void updateD() {
         //Left
         if((nextKey == KeyEvent.VK_LEFT || nextKey == KeyEvent.VK_A) && dx != 1) {

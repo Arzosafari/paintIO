@@ -3,53 +3,59 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
-import java.util.*;
 import java.util.List;
 import java.util.Timer;
+import java.util.*;
+
 
 public class Board extends JPanel {
-    private final int areaHeight;
-    private final int areaWidth;
-    private int botNumber;
-    private ActionListener actionListener;
     private Tile[][] gameArea;
-    private final int scale=20;
-    private ArrayList<Player> players=new ArrayList<>();
-    private ArrayList <HumanPlayer> humanPlayers=new ArrayList<>();
-    private HashMap<Tile,Player> tilePlayerHashMap=new HashMap<>();
-    private ArrayList<Player> deadBots=new ArrayList<>();
-    private ArrayList<Painter> painters=new ArrayList<>();
-    private HashMap<Player,Painter>playerPainterHashMap=new HashMap<>();
-    private int tickCounter=0;
-    private boolean paused = true;
+    private ActionListener actionListener;
+    private final int areaHeight,areaWidth;
+    private final int measure = 28;
+    private int tickCounter = 0;
     private final int tickReset;
+    private int enemyNumber;
+    private ArrayList<Player> players = new ArrayList<>();
+    private ArrayList<HumanPlayer> humanPlayers = new ArrayList<>();
+    private HashMap<Tile, Player> tilePlayerHashMap = new HashMap<>();
+
+    private ArrayList<Player> deadBots = new ArrayList<>();
+    private boolean paused = true;
+
+    private ArrayList<Painter> painters = new ArrayList<>();
+    private HashMap<Player, Painter> playerPainterHashMap = new HashMap<>();
+
     private List<Color> colorList = new ArrayList<>(Arrays.asList(Color.magenta, Color.green, Color.red,
             Color.blue, Color.orange, Color.yellow, Color.pink, new Color(142,12,255),
             new Color(100,43,119), new Color(150,90,100)));
-    Board(ActionListener actionListener,String p1name,int areaHeight,int areaWidth,int gameSpeed,int botNumber){
-        this.actionListener=actionListener;
+
+
+    Board(ActionListener actionListener, String p1name, int areaHeight, int areaWidth, int gameSpeed, int enemyNumber){
+        this.actionListener = actionListener;
         this.areaHeight = areaHeight;
         this.areaWidth = areaWidth;
-        this.botNumber=botNumber;
-        int[]speeds={12,10,8,6,4};
-        tickReset=speeds[gameSpeed-1];
-        players.add(new HumanPlayer(areaHeight,areaWidth,new Color((int)(Math.random()*0x1000000)),p1name));
-        humanPlayers.add((HumanPlayer)players.get(0) );
+        this.enemyNumber = enemyNumber;
+        int[] speeds = {12, 10, 8, 6, 4};
+        tickReset = speeds[gameSpeed - 1];
+
+        players.add(new HumanPlayer(areaHeight, areaWidth, new Color((int)(Math.random() * 0x1000000)), p1name));
+        humanPlayers.add((HumanPlayer)players.get(0));
 
         initBoard();
 
-        painters.add(new Painter(scale,this,humanPlayers.get(0),players));
-        playerPainterHashMap.put(humanPlayers.get(0),painters.get(0));
-
-
+        painters.add(new Painter(measure, this, humanPlayers.get(0), players));
+        playerPainterHashMap.put(humanPlayers.get(0), painters.get(0));
     }
-    Board(ActionListener actionListener,String p1name,String p2name,int areaHeight,int areaWidth,int gameSpeed,int botNumber){
+
+
+    Board(ActionListener actionListener, String p1name, String p2name, int areaHeight, int areaWidth, int gameSpeed, int enemyNumber) {
+        this.actionListener = actionListener;
         this.areaHeight = areaHeight;
         this.areaWidth = areaWidth;
-        this.actionListener=actionListener;
-        this.botNumber=botNumber;
-        int[] speeds={12,10,8,6,4};
-        tickReset=speeds[gameSpeed-1];
+        this.enemyNumber = enemyNumber;
+        int[] speeds = {12, 10, 8, 6, 4};
+        tickReset = speeds[gameSpeed - 1];
 
         players.add(new HumanPlayer(areaHeight, areaWidth, new Color((int)(Math.random() * 0x1000000)), p1name));
         players.add(new HumanPlayer(areaHeight, areaWidth, new Color((int)(Math.random() * 0x1000000)), p2name));
@@ -58,25 +64,38 @@ public class Board extends JPanel {
 
         initBoard();
 
-        painters.add(new Painter(scale, this, humanPlayers.get(0), players));
-        painters.add(new Painter(scale, this, humanPlayers.get(1), players));
+        painters.add(new Painter(measure, this, humanPlayers.get(0), players));
+        painters.add(new Painter(measure, this, humanPlayers.get(1), players));
         playerPainterHashMap.put(humanPlayers.get(0), painters.get(0));
         playerPainterHashMap.put(humanPlayers.get(1), painters.get(1));
-
-
-
     }
 
+
     private void initBoard(){
-        this.gameArea=new Tile[areaHeight][areaWidth];
-        for(int i=0;i<gameArea.length;i++){
-            for(int j=0;j<gameArea[i].length;j++){
-                gameArea[i][j]=new Tile(i,j);
+
+         this.gameArea = new Tile[areaHeight][areaWidth];
+            for(int i = 0; i < gameArea.length; i++) {
+                for (int j = 0; j < gameArea[i].length; j++) {
+                    gameArea[i][j] = new Tile(j, i);
+
+                }
             }
-        }
-        specifyKeyActions();
-        setBackground(Color.BLACK);
-        for(int i = 0; i < botNumber; i++){
+
+        keyEvent();
+        addBot();
+        setBackground(Color.BLUE);
+        timer();
+    }
+    private void timer(){
+        final int INITIAL_DELAY = 0 ;//in time;
+        final int PERIOD_INTERVAL = 1000/60;//60 bar dar saniye va ejraye har task hodode 16 milisecond
+        Timer timer = new Timer();
+        timer.scheduleAtFixedRate(new ScheduleTask(),
+                INITIAL_DELAY, PERIOD_INTERVAL);
+
+    }
+    private void addBot(){
+        for( int i = 0; i < enemyNumber; i++){
             if(i > 9){
                 players.add(new BotPlayer(gameArea.length,gameArea[0].length,
                         new Color((int)(Math.random() * 0x1000000))));
@@ -85,12 +104,11 @@ public class Board extends JPanel {
             }
         }
 
-
-        for(int i=0;i<players.size();i++){
-            if(!checkSpawn(players.get(i))){
+        for( int i = 0; i < players.size(); i++){
+            if(!notClose(players.get(i))){
                 players.remove(players.get(i));
                 i--;
-                if(botNumber > 9){
+                if(enemyNumber > 9){
                     players.add(new BotPlayer(gameArea.length,gameArea[0].length,
                             new Color((int)(Math.random() * 0x1000000))));
                 }else {
@@ -101,18 +119,14 @@ public class Board extends JPanel {
                 startingArea(players.get(i));
             }
         }
-        final int INITIAL_DELAY = 0;
-        final int PERIOD_INTERVAL = 1000/60;
-        java.util.Timer timer = new Timer();
-        timer.scheduleAtFixedRate(new ScheduleTask(),
-                INITIAL_DELAY, PERIOD_INTERVAL);
-
 
     }
 
-    private void specifyKeyActions() {
+
+    private void keyEvent(){
         InputMap im = getInputMap(WHEN_IN_FOCUSED_WINDOW);
         ActionMap am = getActionMap();
+
         if(humanPlayers.size() == 1){
             im.put(KeyStroke.getKeyStroke(KeyEvent.VK_UP, 0), "moveUP");
             am.put("moveUP", new AbstractAction() {
@@ -134,7 +148,50 @@ public class Board extends JPanel {
                 public void actionPerformed(ActionEvent evt) { humanPlayers.get(0).setNextKey(KeyEvent.VK_RIGHT);
                 }
             });
-    }
+        }else if(humanPlayers.size() == 2){
+            im.put(KeyStroke.getKeyStroke(KeyEvent.VK_UP, 0), "moveP1UP");
+            am.put("moveP1UP", new AbstractAction() {
+                public void actionPerformed(ActionEvent evt) { humanPlayers.get(1).setNextKey(KeyEvent.VK_UP);
+                }
+            });
+            im.put(KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, 0), "moveP1DOWN");
+            am.put("moveP1DOWN", new AbstractAction() {
+                public void actionPerformed(ActionEvent evt) {humanPlayers.get(1).setNextKey(KeyEvent.VK_DOWN);
+                }
+            });
+            im.put(KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, 0), "moveP1LEFT");
+            am.put("moveP1LEFT", new AbstractAction() {
+                public void actionPerformed(ActionEvent evt) { humanPlayers.get(1).setNextKey(KeyEvent.VK_LEFT);
+                }
+            });
+            im.put(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, 0), "moveP1RIGHT");
+            am.put("moveP1RIGHT", new AbstractAction() {
+                public void actionPerformed(ActionEvent evt) { humanPlayers.get(1).setNextKey(KeyEvent.VK_RIGHT);
+                }
+            });
+            im.put(KeyStroke.getKeyStroke(KeyEvent.VK_W, 0), "moveP2UP");
+            am.put("moveP2UP", new AbstractAction() {
+                public void actionPerformed(ActionEvent evt) { humanPlayers.get(0).setNextKey(KeyEvent.VK_W);
+                }
+            });
+            im.put(KeyStroke.getKeyStroke(KeyEvent.VK_S, 0), "moveP2DOWN");
+            am.put("moveP2DOWN", new AbstractAction() {
+                public void actionPerformed(ActionEvent evt) {humanPlayers.get(0).setNextKey(KeyEvent.VK_S);
+                }
+            });
+            im.put(KeyStroke.getKeyStroke(KeyEvent.VK_A, 0), "moveP2LEFT");
+            am.put("moveP2LEFT", new AbstractAction() {
+                public void actionPerformed(ActionEvent evt) { humanPlayers.get(0).setNextKey(KeyEvent.VK_A);
+                }
+            });
+            im.put(KeyStroke.getKeyStroke(KeyEvent.VK_D, 0), "moveP2RIGHT");
+            am.put("moveP2RIGHT", new AbstractAction() {
+                public void actionPerformed(ActionEvent evt) { humanPlayers.get(0).setNextKey(KeyEvent.VK_D);
+                }
+            });
+        }
+
+
         im.put(KeyStroke.getKeyStroke(KeyEvent.VK_P, 0), "pause");
         am.put("pause", new AbstractAction() {
             public void actionPerformed(ActionEvent evt) {
@@ -142,73 +199,98 @@ public class Board extends JPanel {
                 actionListener.actionPerformed(action);
             }
         });
+    }
 
-}
-   private void startingArea(Player player){
-        int x=player.getX();
-        int y=player.getY();
-       if(!checkSpawn(player)){
-           Player playerCopy = new BotPlayer(gameArea.length,gameArea[0].length, player.getColor());
-           startingArea(playerCopy);
-       }
-        for(int i=x-1;i<=x+1;i++){
-            for(int j=y-1;j<=y+1;j++){
-                player.setTileOwned(getTile(i,j));
+    /**
+     * Marks all tiles in the starting area of a player to owned by player
+     * @param player player to generate starting area for
+     */
+    private void startingArea(Player player){
+        int x = player.getX();
+        int y = player.getY();
+        if(!notClose(player)){
+            Player playerCopy = new BotPlayer(gameArea.length,gameArea[0].length, player.getColor());
+            startingArea(playerCopy);
+        }
+        for(int i = x-1; i <= x+1; i++){
+            for(int j = y-1; j <= y+1; j++){
+                player.setOwnedTiles(getTile(i,j));
             }
         }
+    }
 
-   }
-   private boolean checkSpawn(Player player){
-        int x=player.getX();
-        int y=player.getY();
-        for(int i=x-3;i<=x+3;i++){
-            for(int j=y-3;j<y+3;j++){
-                if(getTile(i,j).getOwner()!=null||getTile(i,j).getContestedOwner()!=null){
+    /**
+     * Makes sure that a player doesn't spawn on, or too close to another player. Range is set to ±9 square tiles
+     * @param player Player that you want to check surroundings for other players
+     * @return  True if nobody is close, False otherwise
+     */
+    private boolean notClose(Player player){
+        int x = player.getX();
+        int y = player.getY();
+        for(int i = x-3; i <= x+3; i++) {
+            for (int j = y - 3; j <= y + 3; j++) {
+                if (getTile(i, j).getOwner() != null || getTile(i, j).getContestedOwner() != null ) {
                     return false;
                 }
             }
         }
         return true;
-   }
-   public void paintComponent(Graphics g){
+    }
+
+    /**
+     * Overrides paintComponent and is called whenever everything should be drawn on the screen
+     * @param g Graphics element used to draw elements on screen
+     */
+    @Override
+    public void paintComponent(Graphics g) {
         super.paintComponent(g);
-        for(int i=0;i<painters.size();i++) {
-            g.setClip(getWidth() / painters.size() * i, 0, getWidth() / painters.size(), getHeight());
-            g.translate(getWidth() / painters.size() * i, 0);
+        for(int i = 0; i < painters.size(); i++){
+            //Set clipping area for painter
+            g.setClip(getWidth()/painters.size() * i,0,getWidth()/painters.size(),getHeight());
+
+            //Move graphics to top-left of clipping area
+            g.translate(getWidth()/painters.size() * i,0);
+
+            //Painter paints area
             painters.get(i).draw(g);
-            g.translate(-getWidth() / painters.size() * i, 0);
+
+            //Move graphics back to top-left of window
+            g.translate(-getWidth()/painters.size() * i,0);
         }
-            try {
-                drawScoreboard(g);
+        try {
+            drawScoreboard(g);
 
-            } catch(IndexOutOfBoundsException ignored){
-            }
-            Toolkit.getDefaultToolkit().sync();
+        } catch(IndexOutOfBoundsException ignored){
+        }
+        Toolkit.getDefaultToolkit().sync();
+    }
 
-
-   }
-   private void drawScoreboard(Graphics g){
-        g.setFont(new Font("Arial",Font.BOLD,12));
-        FontMetrics fontMetrics=g.getFontMetrics();
-        int fontHeight=fontMetrics.getHeight();
+    /**
+     * Draws the live scoreboard up in the rightmost corner
+     * @param g Graphics object received as argument in paintComponent method
+     */
+    private void drawScoreboard(Graphics g) {
+        g.setFont(new Font("Monospaced", Font.PLAIN, 16));
+        FontMetrics fontMetrics = g.getFontMetrics();
+        int fontHeight = fontMetrics.getHeight();
         int barWidth;
-        int barHeight=fontHeight+4;
+        int barHeight = fontHeight + 4;
 
         Player player;
         String string;
         Color color;
 
-        double highestPercentOwned=players.get(0).getPercentageOfOwned();
+        double highestPercentOwned = players.get(0).getPercentOfOwned();
         Collections.sort(players);
-        for(int i=0;i<Integer.min(5,players.size());i++){
-            player=players.get(i);
-            string=String.format("%.2f%% - " + player.getName(), player.getPercentageOfOwned());
-            color=player.getColor();
+        for(int i = 0; i < Integer.min(5, players.size()); i++){
+            player = players.get(i);
+            string = String.format("%.2f%% - " + player.getNameOfPlayer(), player.getPercentOfOwned());
+            color = player.getColor();
 
-            barWidth=(int)((player.getPercentageOfOwned()/highestPercentOwned)*(getWidth()/4));
+            barWidth = (int)((player.getPercentOfOwned() / highestPercentOwned)*(getWidth()/4));
             g.setColor(player.getColor());
-            g.fillRect(getWidth()-barWidth,barHeight*i,barWidth,barHeight);
-
+            g.fillRect(getWidth() - barWidth,  barHeight*i, barWidth,barHeight);
+            // If color is perceived as dark set the font color to white, else black
             if(0.299*color.getRed() + 0.587*color.getGreen() + 0.114*color.getBlue() < 127){
                 g.setColor(Color.WHITE);
             }else{
@@ -216,77 +298,102 @@ public class Board extends JPanel {
             }
             g.drawString(string, 2+getWidth() -  barWidth,  barHeight*i + fontHeight);
         }
+    }
 
-
-   }
-   private void tick(){
+    /**
+     * Method responsible for main logic of the game. Checks collisions and if enclosures should be filled.
+     */
+    private void tick(){
         Player player;
         tilePlayerHashMap.clear();
-       for (int i = 0; i < players.size(); i++) {
-           player = players.get(i);
-           player.move();
-           if(player.getX() < 0 || player.getX() >= areaWidth || player.getY() < 0 || player.getY() >= areaHeight) {
-               player.die();
-           }else{
-               Tile tile = getTile(player.getX(), player.getY());
-               player.checkAttack(tile);
-               player.setCurrentTile(tile);
-               findCollision(player, tile);
-               if (tile.getOwner() != player && player.getAlive()) {
-                   player.setTileContested(tile);
-                   // If player arrives back to an owned tile
-               } else if (player.getTilesContested().size() > 0) {
-                   player.contestToOwn();
-                   fillEnclosure(player);
-               }
-           }
-           if(player instanceof BotPlayer && !player.getAlive()){
-               deadBots.add(player);
-           }
+        for (int i = 0; i < players.size(); i++) {
+            player = players.get(i);
+            player.move();
+            // Kill player if player moves outside game area
+            if(player.getX() < 0 || player.getX() >= areaWidth || player.getY() < 0 || player.getY() >= areaHeight){
+                player.die();
+            }else{
+                Tile tile = getTile(player.getX(), player.getY());
+                player.checkAttack(tile);
+                player.setCurrentTile(tile);
+                findCollision(player, tile);
 
-           }
-       respawnBots();
-       boolean allKilled = true;
-       for(HumanPlayer humanPlayer : humanPlayers){
-           humanPlayer.updateD();
-           // Sets painter to stop drawing if humanPlayer is dead
-           playerPainterHashMap.get(humanPlayer).setDraw(humanPlayer.getAlive());
-           allKilled = allKilled && !humanPlayer.getAlive();
-       }
-       if(allKilled){
-           endGame();
-       }
-       players.removeIf(p -> !p.getAlive());
+                // If player is outside their owned territory
+                if (tile.getOwner() != player && player.getAlive()) {
+                    player.setContestedTiles(tile);
+                    // If player arrives back to an owned tile
+                } else if (player.getContestedTiles().size() > 0) {
+                    player.contestToOwned();
+                    fillEnclosure(player);
+                }
+            }
+            // If BotPlayer is killed, add it to deadBots list
+            if(player instanceof BotPlayer && !player.getAlive()){
+                deadBots.add(player);
+            }
+        }
+        respawnBots();
 
+        boolean allKilled = true;
+        for(HumanPlayer humanPlayer : humanPlayers){
+            humanPlayer.updateD();
+            // Sets painter to stop drawing if humanPlayer is dead
+            playerPainterHashMap.get(humanPlayer).setDraw(humanPlayer.getAlive());
+            allKilled = allKilled && !humanPlayer.getAlive();
+        }
+        if(allKilled){
+            endGame();
+        }
 
+        // Remove dead players
+        players.removeIf(p -> !p.getAlive());
+    }
 
-   }
-   private void endGame(){
-       JOptionPane.showMessageDialog(this, "YOU LOST!, GAME OVER...", "GAME OVER", JOptionPane.PLAIN_MESSAGE);
-       actionListener.actionPerformed(new ActionEvent(this, 0, "End Game"));
-   }
-   private void respawnBots(){
-       for(int i = 0; i < deadBots.size(); i++){
-           if(deadBots.get(i).getAlive()){
-               Player player = new BotPlayer(gameArea.length,gameArea[0].length,
-                       new Color((int)(Math.random() * 0x1000000)));
-               startingArea(player);
-               players.add(player);
-               deadBots.remove(deadBots.get(i));
-           }
-       }
+    /**
+     * Method to end game and tell this to PaperIO class
+     */
+    private void endGame(){
+        JOptionPane.showMessageDialog(this, "YOU LOST!, GAME OVER...", "GAME OVER", JOptionPane.PLAIN_MESSAGE);
+        actionListener.actionPerformed(new ActionEvent(this, 0, "End Game"));
+    }
 
-   }
-   private void findCollision(Player player,Tile tile){
-        if(tilePlayerHashMap.containsKey(tile)){
+    /**
+     * Method that respawns dead bots after a set interval
+     */
+    private void respawnBots(){
+        for(int i = 0; i < deadBots.size(); i++){
+            if(deadBots.get(i).getAlive()){
+                Player player = new BotPlayer(gameArea.length,gameArea[0].length,
+                        new Color((int)(Math.random() * 0x1000000)));
+                startingArea(player);
+                players.add(player);
+                deadBots.remove(deadBots.get(i));
+            }
+        }
+    }
+
+    /**
+     * Method that detects player-to-player head on collision
+     * @param player Player you want to check collision for
+     * @param tile   Tile that Player currently is on
+     */
+    private void findCollision(Player player, Tile tile) {
+        // If corresponding tile is found in tilePlayerMap
+        if(tilePlayerHashMap.containsKey(tile)) {
+
+            // Iterate through all entries in tilePlayerMap, if the Tile in entry matches Tile in input,
+            // compare sizes between players and destroy one of them. The player with the largest tiles contested
+            // survives. If both players have the same amount of tiles contested, the player with the most tiles
+            // owned survives. If both players have the same amount of tiles contested and tiles owned,
+            // the first player added to Players list dies.
             for(Map.Entry<Tile, Player> entry : tilePlayerHashMap.entrySet()) {
                 if (entry.getKey() == tile) {
-                    if (entry.getValue().getTilesContested().size() > player.getTilesContested().size()) {
+                    if (entry.getValue().getContestedTiles().size() > player.getContestedTiles().size()) {
                         entry.getValue().die();
-                    } else if (entry.getValue().getTilesContested().size() < player.getTilesContested().size()) {
+                    } else if (entry.getValue().getContestedTiles().size() < player.getContestedTiles().size()) {
                         player.die();
-                    } else if (entry.getValue().getTilesContested().size() == player.getTilesContested().size()) {
-                        if (entry.getValue().getTilesOwned().size() > player.getTilesOwned().size()) {
+                    } else if (entry.getValue().getContestedTiles().size() == player.getContestedTiles().size()) {
+                        if (entry.getValue().getOwnedTiles().size() > player.getOwnedTiles().size()) {
                             entry.getValue().die();
                         } else {
                             player.die();
@@ -294,35 +401,52 @@ public class Board extends JPanel {
                     }
                 }
             }
-
-        }else{
+        }else { // If no corresponding tile is found, add tile and player to tilePlayerMap
             tilePlayerHashMap.put(tile, player);
         }
-       players.removeIf(p -> !p.getAlive());
+        // Remove dead players
+        players.removeIf(p -> !p.getAlive());
+    }
 
-   }
+    /**
+     * Controls tick counter of game which is needed to make game smooth.
+     */
     private void updateTick(){
         tickCounter++;
         tickCounter %= tickReset;
     }
-    private void fillEnclosure(Player player){
+
+    /**
+     * After a player has traveled out to enclose an area the area needs to be filled. This method depends on that the
+     * Player.contestedToOwned() method has been called. The method works by doing a depth first search from each tile
+     * adjacent to a tile owned by the player sent as parameter. If the DFS algorithm finds a boundary we know it is not
+     * enclosed and should not be filled. The boundary is the smallest rectangle surrounding all owned tiles by the
+     * player to minimize cost of method. If the DFS can't find the boundary or if the one the DFS starts on we know it
+
+     */
+    private void fillEnclosure(Player player) {
+
         int maxX = 0;
         int minX = gameArea[0].length;
         int maxY = 0;
         int minY = gameArea.length;
-        for (Tile t : player.getTilesOwned()) {
+        for (Tile t : player.getOwnedTiles()) {
             if(t.getX() > maxX) maxX = t.getX();
             if(t.getX() < minX) minX = t.getX();
             if(t.getY() > maxY) maxY = t.getY();
             if(t.getY() < minY) minY = t.getY();
         }
+
+
         ArrayList<Tile> outside = new ArrayList<>();
         ArrayList<Tile> inside  = new ArrayList<>();
         ArrayList<Tile> visited = new ArrayList<>();
         HashSet<Tile> toCheck = new HashSet<>();
+
+
         int y;
         int x;
-        for(Tile t : player.getTilesOwned()){
+        for(Tile t : player.getOwnedTiles()){
             y = t.getY();
             x = t.getX();
             if(y -1 >= 0) toCheck.add(gameArea[y-1][x]);
@@ -330,6 +454,9 @@ public class Board extends JPanel {
             if(x - 1 >= 0) toCheck.add(gameArea[y][x-1]);
             if(x + 1 < gameArea[y].length) toCheck.add(gameArea[y][x+1]);
         }
+
+
+
         for(Tile t : toCheck){
             if(!inside.contains(t)){
                 Stack<Tile> stack = new Stack<>();
@@ -337,7 +464,7 @@ public class Board extends JPanel {
                 Tile v;
                 visited.clear();
 
-                // DFS algorithm
+
                 stack.push(t);
                 while((!stack.empty()) && cont){
                     v = stack.pop();
@@ -357,41 +484,78 @@ public class Board extends JPanel {
                         }
                     }
                 }
-                if(cont){ // If DFS don't find boundary
+                if(cont){
                     inside.addAll(visited);
                 }else{
                     outside.addAll(visited);
                 }
             }
         }
+
+
         for(Tile t : inside){
-            player.setTileOwned(t);
+            player.setOwnedTiles(t);
         }
-
-
-
     }
-    void setPaused(boolean b){
-        paused=b;
+
+    /**
+     * Set board to paused mode, meaning logic and graphics are not updated
+     * @param b True if game should be paused, false otherwise
+     */
+    void setPaused(Boolean b){
+        paused = b;
     }
-    int getAreaHeight(){
+
+    /**
+     * Get height of game area
+     * @return height of game area
+     */
+    int getAreaHeight() {
         return areaHeight;
     }
 
-    public int getAreaWidth() {
+    /**
+     * Get width of game area
+     * @return width of game area
+     */
+    int getAreaWidth() {
         return areaWidth;
     }
-    int getTickCounter(){
+
+    /**
+     * Get current tick counter
+     * @return current tick counter
+     */
+    int getTickCounter() {
         return tickCounter;
     }
-    int getTickReset(){
+
+    /**
+     * Get how often tick is reset, impacting speed of game
+     * @return how often tick is reset
+     */
+    int getTickReset() {
         return tickReset;
     }
+
+    /**
+     * Get tile at position (x,y)
+     * @param x x position of tile
+     * @param y y position of tile
+     * @return tile at position (x,y)
+     */
     Tile getTile(int x, int y){
         return gameArea[y][x];
     }
-    private class ScheduleTask extends TimerTask{
 
+    /**
+     * ScheduleTask is responsible for receiving and responding to timer calls
+     */
+    private class ScheduleTask extends TimerTask {
+
+        /**
+         * Gets called by timer at specified interval. Calls tick at specified rate and repaint each time
+         */
         @Override
         public void run() {
             if(!paused) {
@@ -402,7 +566,5 @@ public class Board extends JPanel {
                 repaint();
             }
         }
-
-        }
     }
-
+}

@@ -1,50 +1,30 @@
 
+
 import java.awt.*;
-import java.util.ArrayList;
 import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 
-/**
- * BotPlayer adds bot movement on top of abstract class Player. Movement is randomised as long as it is valid moves. A
- * BotPlayer has a random Pokemon name.
- */
+
 class BotPlayer extends Player{
 
-    // TODO read all names from file
-    private String[] names = {"Bulbasaur", "Ivysaur", "Venusaur", "Charmander", "Charmeleon", "Charizard", "Squirtle",
-            "Wartortle", "Blastoise", "Caterpie", "Metapod", "Butterfree", "Weedle", "Kakuna", "Beedrill", "Pidgey",
-            "Pidgeotto", "Pidgeot", "Rattata", "Raticate", "Spearow", "Fearow", "Ekans", "Arbok", "Pikachu", "Raichu",
-            "Sandshrew", "Sandslash", "Nidoran", "Nidorina", "Nidoqueen", "Nidoran", "Nidorino", "Nidoking", "Clefairy",
-            "Clefable", "Vulpix", "Ninetales", "Jigglypuff", "Wigglytuff", "Zubat", "Golbat", "Oddish", "Gloom",
-            "Vileplume", "Paras", "Parasect", "Venonat", "Venomoth", "Diglett", "Dugtrio", "Meowth", "Persian",
-            "Psyduck", "Golduck", "Mankey", "Primeape", "Growlithe", "Arcanine", "Poliwag", "Poliwhirl", "Poliwrath",
-            "Abra", "Kadabra", "Alakazam", "Machop", "Machoke", "Machamp", "Bellsprout", "Weepinbell", "Victreebel",
-            "Tentacool", "Tentacruel", "Geodude", "Graveler", "Golem", "Ponyta", "Rapidash", "Slowpoke", "Slowbro",
-            "Magnemite", "Magneton", "Farfetch'd", "Doduo", "Dodrio", "Seel", "Dewgong", "Grimer", "Muk", "Shellder",
-            "Cloyster", "Gastly", "Haunter", "Gengar", "Onix", "Drowzee", "Hypno", "Krabby", "Kingler", "Voltorb",
-            "Electrode", "Exeggcute", "Exeggutor", "Cubone", "Marowak", "Hitmonlee", "Hitmonchan", "Lickitung",
-            "Koffing", "Weezing", "Rhyhorn", "Rhydon", "Chansey", "Tangela", "Kangaskhan", "Horsea", "Seadra",
-            "Goldeen", "Seaking", "Staryu", "Starmie", "Mr. Mime", "Scyther", "Jynx", "Electabuzz", "Magmar", "Pinsir",
-            "Tauros", "Magikarp", "Gyarados", "Lapras", "Ditto", "Eevee", "Vaporeon", "Jolteon", "Flareon", "Porygon",
-            "Omanyte", "Omastar", "Kabuto", "Kabutops", "Aerodactyl", "Snorlax", "Articuno", "Zapdos", "Moltres",
-            "Dratini", "Dragonair", "Dragonite", "Mewtwo", "Mew"};
 
-    /**
-     * Constructs a new BotPLayer on a random spot on the game area with specified color with a randomized direction
-     * @param height height of game area player is constructed in
-     * @param width width of game area player is constructed in
-     * @param color the color of the player
-     */
+
+    private String[] nameOfBots = {"Emma", "Olivia", "Ava", "Sophia", "Isabella", "Mia", "Charlotte", "Amelia", "Harper", "Evelyn", "Abigail", "Emily", "Elizabeth", "Mila", "Ella", "Avery", "Scarlett", "Sofia", "Chloe", "Victoria", "Layla", "Madison", "Grace", "Zoey", "Penelope", "Nora", "Riley", "Lily", "Eleanor", "Hannah", "Lila", "Aria", "Aubrey", "Ellie", "Stella", "Hazel", "Maya", "Aurora", "Natalie", "Emilia", "Addison", "Brooklyn", "Samantha", "Leah", "Audrey", "Caroline", "Savannah", "Genesis", "Piper", "Arianna", "Valentina", "Naomi", "Bella", "Paisley", "Clara", "Violet", "Nova", "Kennedy", "Madelyn", "Skylar", "Alice", "Cora", "Ruby", "Ivy", "Ariana", "Isabelle", "Jasmine", "Eva", "Everly", "Autumn", "Sadie", "Gianna", "Willow", "Quinn", "Serenity", "Peyton", "Madeline", "Gabriella", "Lydia", "Adelaide", "Madilyn", "Adeline", "Makenzie", "Jade", "Nevaeh", "Adalyn", "Aurora", "Melody", "Julia", "Isla", "Aubree", "Kinsley", "Kaylee", "Raelynn", "Ariel", "Jordyn", "Aylin", "Mariah", "Giselle", "Amara", "Elaina", "Everleigh", "Phoebe", "Harley", "Brielle", "Angelina", "Genesis", "Gia", "Alexandria", "Dahlia", "Laylah", "Zara", "Athena", "Kaitlyn", "Harmony", "Ximena", "Kali", "Valeria", "Arielle", "Hope", "Hayley", "Emery", "Leilani", "Aspen", "Jade", "Lilith", "Poppy", "Amaya", "Mckenna", "Rosalind", "Leila", "Saylor", "Brynlee", "Analia", "Alondra", "Aniyah", "Tiana", "Milana", "Kinslee", "Celeste", "Mabel", "Alanna", "Briar", "Leighton", "Elsie", "Magnolia", "Ainsley"};
+
+
+
+        /**
+         * Constructs a new BotPLayer on a random spot on the game area with specified color with a randomized direction
+         * @param height height of game area player is constructed in
+         * @param width width of game area player is constructed in
+         * @param color the color of the player
+         */
     BotPlayer(int height, int width, Color color){
         super(height, width, color);
-        this.name = names[new Random().nextInt(names.length)];
+        this.nameOfPlayer = nameOfBots[new Random().nextInt(nameOfBots.length)];
     }
 
-    // TODO Make smarter bots
-    /**
-     * Decides where the bot shall move and moves accordingly
-     */
     @Override
     public void move() {
         x += dx;
@@ -67,9 +47,7 @@ class BotPlayer extends Player{
 
     }
 
-    /**
-     * Checks if player is moving outside of game area and changes direction to prevent it
-     */
+
     private void avoidOutOfBounds(){
         if(x == 0 && y == height - 1){
             if(dx == -1){
@@ -118,9 +96,6 @@ class BotPlayer extends Player{
         }
     }
 
-    /**
-     * Overridden die method from Player. Adds a timer to the bot. After set interval, the bot will respawn
-     */
     @Override
     void die() {
         super.die();
