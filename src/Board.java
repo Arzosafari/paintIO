@@ -1,8 +1,7 @@
 import javax.swing.*;
+import javax.swing.event.MouseInputAdapter;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
+import java.awt.event.*;
 import java.util.List;
 import java.util.Timer;
 import java.util.*;
@@ -80,6 +79,10 @@ public class Board extends JPanel {
 
                 }
             }
+        if (humanPlayers.size() == 1) {
+            Player player = humanPlayers.get(0);
+            movePlayerByMouse(player);
+        }
 
         keyEvent();
         addBot();
@@ -116,7 +119,7 @@ public class Board extends JPanel {
                 }
 
             }else {
-                startingArea(players.get(i));
+                firstPlace(players.get(i));
             }
         }
 
@@ -201,16 +204,52 @@ public class Board extends JPanel {
         });
     }
 
+
+    private void movePlayerByMouse(Player player) {
+        // Add a mouse listener to the game panel
+        addMouseMotionListener(new MouseMotionAdapter() {
+            public void mouseDragged(MouseEvent e) {
+                // Compute the distance and direction of the mouse drag
+                int distX = e.getX() - player.getX();
+                int distY = e.getY() - player.getY();
+
+                // Determine the direction of movement based on the distance
+                if (Math.abs(distX) > Math.abs(distY)) {
+                    // Move left or right
+                    if (distX < 0) {
+                        ((HumanPlayer) player).setNextKey(KeyEvent.VK_LEFT);
+                        player.setX(player.getX() - tickReset);
+                    } else {
+                        ((HumanPlayer) player).setNextKey(KeyEvent.VK_RIGHT);
+                        player.setX(player.getX() + tickReset);
+                    }
+                } else {
+                    // Move up or down
+                    if (distY < 0) {
+                        ((HumanPlayer) player).setNextKey(KeyEvent.VK_UP);
+                        player.setY(player.getY() - tickReset);
+                    } else {
+                        ((HumanPlayer) player).setNextKey(KeyEvent.VK_DOWN);
+                        player.setY(player.getY() + tickReset);
+                    }
+                }
+
+
+            }
+        });
+    }
+
+
     /**
      * Marks all tiles in the starting area of a player to owned by player
      * @param player player to generate starting area for
      */
-    private void startingArea(Player player){
+    private void firstPlace(Player player){
         int x = player.getX();
         int y = player.getY();
         if(!notClose(player)){
-            Player playerCopy = new BotPlayer(gameArea.length,gameArea[0].length, player.getColor());
-            startingArea(playerCopy);
+            Player player2 = new BotPlayer(gameArea.length,gameArea[0].length, player.getColor());
+            firstPlace(player2);
         }
         for(int i = x-1; i <= x+1; i++){
             for(int j = y-1; j <= y+1; j++){
@@ -219,11 +258,7 @@ public class Board extends JPanel {
         }
     }
 
-    /**
-     * Makes sure that a player doesn't spawn on, or too close to another player. Range is set to ±9 square tiles
-     * @param player Player that you want to check surroundings for other players
-     * @return  True if nobody is close, False otherwise
-     */
+
     private boolean notClose(Player player){
         int x = player.getX();
         int y = player.getY();
@@ -234,7 +269,7 @@ public class Board extends JPanel {
                 }
             }
         }
-        return true;
+        return true;//if no body is close
     }
 
     /**
@@ -245,36 +280,26 @@ public class Board extends JPanel {
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
         for(int i = 0; i < painters.size(); i++){
-            //Set clipping area for painter
             g.setClip(getWidth()/painters.size() * i,0,getWidth()/painters.size(),getHeight());
-
-            //Move graphics to top-left of clipping area
             g.translate(getWidth()/painters.size() * i,0);
+            painters.get(i).render(g);
 
-            //Painter paints area
-            painters.get(i).draw(g);
-
-            //Move graphics back to top-left of window
             g.translate(-getWidth()/painters.size() * i,0);
         }
         try {
-            drawScoreboard(g);
+            renderScoreboard(g);
 
         } catch(IndexOutOfBoundsException ignored){
         }
         Toolkit.getDefaultToolkit().sync();
     }
 
-    /**
-     * Draws the live scoreboard up in the rightmost corner
-     * @param g Graphics object received as argument in paintComponent method
-     */
-    private void drawScoreboard(Graphics g) {
-        g.setFont(new Font("Monospaced", Font.PLAIN, 16));
+    private void renderScoreboard(Graphics g) {
+        g.setFont(new Font("Arial", Font.BOLD, 12));
         FontMetrics fontMetrics = g.getFontMetrics();
         int fontHeight = fontMetrics.getHeight();
-        int barWidth;
-        int barHeight = fontHeight + 4;
+        int rectWidth;
+        int rectHeight = fontHeight + 5;
 
         Player player;
         String string;
@@ -287,65 +312,65 @@ public class Board extends JPanel {
             string = String.format("%.2f%% - " + player.getNameOfPlayer(), player.getPercentOfOwned());
             color = player.getColor();
 
-            barWidth = (int)((player.getPercentOfOwned() / highestPercentOwned)*(getWidth()/4));
+            rectWidth = (int)((player.getPercentOfOwned() / highestPercentOwned)*(getWidth()/4));
             g.setColor(player.getColor());
-            g.fillRect(getWidth() - barWidth,  barHeight*i, barWidth,barHeight);
+            g.fillRect(getWidth() - rectWidth,  rectHeight*i, rectWidth,rectHeight);
             // If color is perceived as dark set the font color to white, else black
             if(0.299*color.getRed() + 0.587*color.getGreen() + 0.114*color.getBlue() < 127){
                 g.setColor(Color.WHITE);
             }else{
                 g.setColor(Color.BLACK);
             }
-            g.drawString(string, 2+getWidth() -  barWidth,  barHeight*i + fontHeight);
+            g.drawString(string, 2+getWidth() -  rectWidth,  rectHeight*i + fontHeight);
         }
     }
 
-    /**
-     * Method responsible for main logic of the game. Checks collisions and if enclosures should be filled.
-     */
-    private void tick(){
+    private void logic(){
         Player player;
         tilePlayerHashMap.clear();
         for (int i = 0; i < players.size(); i++) {
             player = players.get(i);
             player.move();
-            // Kill player if player moves outside game area
-            if(player.getX() < 0 || player.getX() >= areaWidth || player.getY() < 0 || player.getY() >= areaHeight){
-                player.die();
-            }else{
-                Tile tile = getTile(player.getX(), player.getY());
-                player.checkAttack(tile);
-                player.setCurrentTile(tile);
-                findCollision(player, tile);
+            int x = player.getX();
+            int y = player.getY();
+            // Wrap the player's movement if they move outside the game area
+            if (x < 0) x = areaWidth - 1;
+            if (x >= areaWidth) x = 0;
+            if (y < 0) y = areaHeight - 1;
+            if (y >= areaHeight) y = 0;
+            Tile tile = getTile(x, y);
+            player.checkAttack(tile);
+            player.setCurrentTile(tile);
+            findCollision(player, tile);
 
-                // If player is outside their owned territory
-                if (tile.getOwner() != player && player.getAlive()) {
-                    player.setContestedTiles(tile);
-                    // If player arrives back to an owned tile
-                } else if (player.getContestedTiles().size() > 0) {
-                    player.contestToOwned();
-                    fillEnclosure(player);
-                }
+            // If player is outside their owned territory
+            if (tile.getOwner() != player && player.getAlive()) {
+                player.setContestedTiles(tile);
+                // If player arrives back to an owned tile
+            } else if (player.getContestedTiles().size() > 0) {
+                player.contestToOwned();
+                fillEnclosure(player);
             }
+
             // If BotPlayer is killed, add it to deadBots list
-            if(player instanceof BotPlayer && !player.getAlive()){
+            if (player instanceof BotPlayer && !player.getAlive()) {
                 deadBots.add(player);
             }
         }
         respawnBots();
 
         boolean allKilled = true;
-        for(HumanPlayer humanPlayer : humanPlayers){
+        for (HumanPlayer humanPlayer : humanPlayers) {
             humanPlayer.updateD();
             // Sets painter to stop drawing if humanPlayer is dead
             playerPainterHashMap.get(humanPlayer).setDraw(humanPlayer.getAlive());
             allKilled = allKilled && !humanPlayer.getAlive();
         }
-        if(allKilled){
+        if (allKilled) {
             endGame();
         }
 
-        // Remove dead players
+// Remove dead players
         players.removeIf(p -> !p.getAlive());
     }
 
@@ -365,7 +390,7 @@ public class Board extends JPanel {
             if(deadBots.get(i).getAlive()){
                 Player player = new BotPlayer(gameArea.length,gameArea[0].length,
                         new Color((int)(Math.random() * 0x1000000)));
-                startingArea(player);
+                firstPlace(player);
                 players.add(player);
                 deadBots.remove(deadBots.get(i));
             }
@@ -561,7 +586,7 @@ public class Board extends JPanel {
             if(!paused) {
                 updateTick();
                 if (tickCounter == 0) {
-                    tick();
+                    logic();
                 }
                 repaint();
             }

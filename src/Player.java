@@ -50,6 +50,7 @@ public abstract class Player implements Comparable<Player> {//
         t.setContestedOwner(this);
     }
     ArrayList<Tile> getContestedTiles(){
+
         return contestedTiles;
     }
     void setCurrentTile(Tile currentTile) {
@@ -60,9 +61,20 @@ public abstract class Player implements Comparable<Player> {//
         return nameOfPlayer;
     }
     public void setAlive(Boolean alive) {
+
         isAlive = alive;
     }
-    public int compareTo(Player player){
+
+    public void setY(int y) {
+        this.y = y;
+    }
+
+    public void setX(int x) {
+        this.x = x;
+    }
+
+    public int compare(Player player){
+
         return Integer.compare(player.getOwnedTiles().size(), ownedTiles.size());
     }
 

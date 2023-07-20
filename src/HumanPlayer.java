@@ -48,4 +48,9 @@ public class HumanPlayer extends Player {
             dy = 1;
         }
     }
+
+    @Override
+    public int compareTo(Player o) {
+        return 0;
+    }
 }

@@ -20,7 +20,7 @@ class Painter {
 
 
 
-    void draw(Graphics g){
+    void render(Graphics g){
         if(draw){
             height = g.getClipBounds().height;
             width = g.getClipBounds().width;
