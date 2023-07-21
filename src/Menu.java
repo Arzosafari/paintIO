@@ -20,10 +20,10 @@ public class Menu extends JPanel {
         return player2Name.getText();
     }
     public int getAreaHeight() {
-        return Integer.valueOf(((JTextField)areaHSpinner.getEditor().getComponent(0)).getText());
+        return 350;
     }
     public int getAreaWidth() {
-        return Integer.valueOf(((JTextField)areaHSpinner.getEditor().getComponent(0)).getText());
+        return 350;
     }
     public int getGameSpeed(){
         return Integer.valueOf(((JTextField)gameSpeedSpinner.getEditor().getComponent(0)).getText());
@@ -80,16 +80,16 @@ public class Menu extends JPanel {
 
 
     private void addSpinner(){
-        JLabel areaHLabel=new JLabel("ENTER GAME AREA HEIGHT: " );
-        areaHSpinner=new JSpinner(new SpinnerNumberModel(300,25,500,50));
-        JLabel areaWLabel=new JLabel("ENTER GAME AREA WIDTH: ");
-        areaWSpinner=new JSpinner(new SpinnerNumberModel(300,25,500,50));
+       // JLabel areaHLabel=new JLabel("ENTER GAME AREA HEIGHT: " );
+       // areaHSpinner=new JSpinner(new SpinnerNumberModel(300,25,600,50));
+       // JLabel areaWLabel=new JLabel("ENTER GAME AREA WIDTH: ");
+      //  areaWSpinner=new JSpinner(new SpinnerNumberModel(300,25,1000,50));
         JLabel speedLabel=new JLabel("ENTER GAME SPEED(1,2,3,4,5): ");
         gameSpeedSpinner=new JSpinner(new SpinnerNumberModel(2,1,5,1));
         JLabel botNumberLabel=new JLabel("ENTER NUMBER OF BOTS: ");
-        botNumberSpinner=new JSpinner(new SpinnerNumberModel(15,0,25,1));
-        JLabel[] setLabels={areaHLabel,areaWLabel,speedLabel,botNumberLabel};
-        JSpinner[] setSpinners={areaHSpinner,areaWSpinner,gameSpeedSpinner,botNumberSpinner};
+        botNumberSpinner=new JSpinner(new SpinnerNumberModel(15,0,100,1));
+        JLabel[] setLabels={speedLabel,botNumberLabel};
+        JSpinner[] setSpinners={gameSpeedSpinner,botNumberSpinner};
         for(JLabel label:setLabels){
             label.setFont(new Font("Arial",Font.BOLD,16));
             label.setForeground(Color.WHITE);
@@ -101,7 +101,7 @@ public class Menu extends JPanel {
             textField.setBackground(Color.MAGENTA);
             textField.setForeground(Color.WHITE);
             textField.setHorizontalAlignment(JTextField.CENTER);}
-        JComponent[]setComponent={areaHLabel,areaHSpinner,areaWLabel,areaWSpinner,speedLabel,gameSpeedSpinner,botNumberLabel,botNumberSpinner};
+        JComponent[]setComponent={speedLabel,gameSpeedSpinner,botNumberLabel,botNumberSpinner};
         for(JComponent component:setComponent){
             add(component);
         }

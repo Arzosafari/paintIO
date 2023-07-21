@@ -86,7 +86,7 @@ public class Board extends JPanel {
 
         keyEvent();
         addBot();
-        setBackground(Color.BLUE);
+        setBackground(Color.BLACK);
         timer();
     }
     private void timer(){
@@ -259,6 +259,7 @@ public class Board extends JPanel {
     }
 
 
+
     private boolean notClose(Player player){
         int x = player.getX();
         int y = player.getY();
@@ -333,7 +334,7 @@ public class Board extends JPanel {
             player.move();
             int x = player.getX();
             int y = player.getY();
-            // Wrap the player's movement if they move outside the game area
+            // unlimited part
             if (x < 0) x = areaWidth - 1;
             if (x >= areaWidth) x = 0;
             if (y < 0) y = areaHeight - 1;
@@ -357,11 +358,11 @@ public class Board extends JPanel {
                 deadBots.add(player);
             }
         }
-        respawnBots();
+        renewBots();
 
         boolean allKilled = true;
         for (HumanPlayer humanPlayer : humanPlayers) {
-            humanPlayer.updateD();
+            humanPlayer.updateDirection();
             // Sets painter to stop drawing if humanPlayer is dead
             playerPainterHashMap.get(humanPlayer).setDraw(humanPlayer.getAlive());
             allKilled = allKilled && !humanPlayer.getAlive();
@@ -385,7 +386,7 @@ public class Board extends JPanel {
     /**
      * Method that respawns dead bots after a set interval
      */
-    private void respawnBots(){
+    private void renewBots(){
         for(int i = 0; i < deadBots.size(); i++){
             if(deadBots.get(i).getAlive()){
                 Player player = new BotPlayer(gameArea.length,gameArea[0].length,
@@ -429,14 +430,14 @@ public class Board extends JPanel {
         }else { // If no corresponding tile is found, add tile and player to tilePlayerMap
             tilePlayerHashMap.put(tile, player);
         }
-        // Remove dead players
+        // Remove dead players(lambda)
         players.removeIf(p -> !p.getAlive());
     }
 
     /**
      * Controls tick counter of game which is needed to make game smooth.
      */
-    private void updateTick(){
+    private void smooth(){
         tickCounter++;
         tickCounter %= tickReset;
     }
@@ -584,7 +585,7 @@ public class Board extends JPanel {
         @Override
         public void run() {
             if(!paused) {
-                updateTick();
+                smooth();
                 if (tickCounter == 0) {
                     logic();
                 }

@@ -11,7 +11,6 @@ public class HumanPlayer extends Player {
     }
 
 
-
     @Override
     public void move(){
         x += dx;
@@ -20,10 +19,11 @@ public class HumanPlayer extends Player {
     HumanPlayer(int height, int width, Color color, String nameOfPlayer) {
         super(height, width, color);
         this.nameOfPlayer = nameOfPlayer;
+
     }
 
 
-    void updateD() {
+    void updateDirection() {
         //Left
         if((nextKey == KeyEvent.VK_LEFT || nextKey == KeyEvent.VK_A) && dx != 1) {
             dx = -1;

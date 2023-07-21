@@ -43,13 +43,13 @@ class BotPlayer extends Player{
             dx = 0;
             dy = -1;
         }
-        avoidOutOfBounds();
+        dontBeFar();
 
     }
 
 
-    private void avoidOutOfBounds(){
-        if(x == 0 && y == height - 1){
+    private void dontBeFar(){
+        if(x == 0 && y == 350 - 1){
             if(dx == -1){
                 dx = 0;
                 dy = -1;
@@ -57,7 +57,7 @@ class BotPlayer extends Player{
                 dx = 1;
                 dy = 0;
             }
-        }else if(x == width -1 && y == 0){
+        }else if(x == 350 -1 && y == 0){
             if(dx == 1){
                 dx = 0;
                 dy = 1;
@@ -65,7 +65,7 @@ class BotPlayer extends Player{
                 dx = -1;
                 dy = 0;
             }
-        }else if(x == width - 1 && y == height -1){
+        }else if(x == 350 - 1 && y == 350 -1){
             if(dx == 1){
                 dx = 0;
                 dy = -1;
@@ -84,13 +84,13 @@ class BotPlayer extends Player{
         }else if(x == 0 && dx == -1){
             dx = 0;
             dy = 1;
-        }else if(x == width -1 &&  dx == 1){
+        }else if(x == 350 -1 &&  dx == 1){
             dx = 0;
             dy = 1;
         }else if(y == 0 && dy == -1){
             dx = 1;
             dy = 0;
-        }else if(y == height -1 && dy == 1){
+        }else if(y == 350 -1 && dy == 1){
             dx = 1;
             dy = 0;
         }
