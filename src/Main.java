@@ -4,60 +4,52 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 
 public class Main extends JFrame implements ActionListener {
-    private Board board;
-    private Menu menu;
-    private JPanel card;
+    private JPanel panel;
+    private Game gameScene;
+    private MenuScene menuScene;
+
+    private SCENE s;
     private Main(){
-        initUi();
-    }
-    private void initUi(){
-        setSize(1000,1000);
-        setResizable(true);
+        setSize(500,500);
+        setTitle("PAINT.IO");
         setVisible(true);
-        setTitle("Paint_io");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setLocationRelativeTo(null);//center the frame
-        menu=new Menu(this);
-        card=new JPanel(new CardLayout());
-        card.add(menu,"menu");
-        add(card);
-    }
-    private enum STATES{
-        GAME,MENU
-
-    }
-    private void setState(STATES s){
-        CardLayout cardLayout=(CardLayout) card.getLayout();
-        if(s==STATES.GAME){
-            cardLayout.show(card,"board");
-            board.setPaused(false);
-        }else if(s==STATES.MENU){
-            cardLayout.show(card,"menu");
-            board.setPaused(true);
-        }
+        setLocationRelativeTo(null);
+        setResizable(false);
+        addMenu();
 
     }
 
+    private void addMenu(){
+        menuScene=new MenuScene(this);
+        CardLayout cardLayout=new CardLayout();
+        panel=new JPanel(cardLayout);
+        panel.add(menuScene,"menuScene");
+        add(panel);
+    }
     @Override
     public void actionPerformed(ActionEvent e) {
+        CardLayout cardLayout = (CardLayout) panel.getLayout();
         switch (e.getActionCommand()){
-            case "play single":
-                board=new Board(this,menu.getP1Name(),menu.getAreaHeight(),menu.getAreaWidth(),menu.getGameSpeed(),menu.getBotNumber());
-                card.add(board,"board");
-                setState(STATES.GAME);
+            case "LEVEL 1":
+                gameScene=new Game();
+                panel.add(gameScene,"gameScene");
+                cardLayout.show(panel,"gameScene");
                 break;
-            case "play Multi":
-                board=new Board(this,menu.getP1Name(),menu.getP2Name(),menu.getAreaHeight(),menu.getAreaWidth(),menu.getGameSpeed(),menu.getBotNumber());
-                card.add(board,"board");
-                setState(STATES.GAME);
+            case "LEVEL 2":
+                gameScene=new Game();
+                panel.add(gameScene,"gameScene");
+                cardLayout.show(panel,"gameScene");
                 break;
-            case" End Game":
-                setState(STATES.MENU);
+            case "GAME OVER":
+                cardLayout.show(panel,"menuScene");
                 break;
-        }
 
+        }
     }
-    public static void main(String[]args){
+
+
+    public static void main(String[] args) {
         EventQueue.invokeLater(Main::new);
     }
 }
