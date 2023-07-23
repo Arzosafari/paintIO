@@ -123,7 +123,7 @@ public abstract class Player {
 
     }
     abstract void move();
-    protected void removeDarkNOde(Node node){
+    protected void removeDarkNode(Node node){
         darkNodes.remove(node);
     }
     protected void ChangeBrightToDark(){
@@ -134,6 +134,8 @@ public abstract class Player {
 
     }
     protected void Fight(Node node){
+        if(node.getNotCompleteOwner()!=null)
+            node.getNotCompleteOwner().killed();
 
     }
 

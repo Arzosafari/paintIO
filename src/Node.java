@@ -11,6 +11,10 @@ public class Node {
     int getY(){
         return y;
     }
+    Node(int x,int y){
+        this.x=x;
+        this.y=y;
+    }
     Player getNotCompleteOwner(){
         return notCompleteOwner;
     }
@@ -22,7 +26,7 @@ public class Node {
     }
     void setOwner(Player owner){
         if(this.owner!=null){
-            this.owner.removeDarkNodes(this);
+            this.owner.removeDarkNode(this);
         }
         this.owner=owner;
     }
