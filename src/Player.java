@@ -1,153 +1,142 @@
 import java.awt.*;
 import java.util.ArrayList;
 
-public abstract class Player implements Comparable<Player> {//
-    int x,y,dx,dy;
+public abstract class Player {
+    int x, y;
+    int dX, dY;
     String nameOfPlayer;
-    int height,width;
     private Color color;
-    private Boolean isAlive = true;
-    private Tile currentTile;
-    private ArrayList<Tile> ownedTiles = new ArrayList<>();
-    private ArrayList<Tile> contestedTiles = new ArrayList<>();
-    Boolean getAlive() {
-        return isAlive;
-    }
-    int getX(){
+    private Boolean dead = false;
+    private Node thisNode;
+    private ArrayList<Node> darkNodes = new ArrayList<>();
+    private ArrayList<Node> brightNodes = new ArrayList<>();
+
+    int getX() {
         return x;
     }
-    int getY(){
+
+    int getY() {
         return y;
     }
+
+    Boolean getDead() {
+        return dead;
+    }
+
     int getDx() {
-
-        return dx;
+        return dX;
     }
+
     int getDy() {
-
-        return dy;
+        return dY;
     }
 
-    Color getColor(){
-
+    Color getColor() {
         return color;
     }
-    void setOwnedTiles(Tile t){
-        ownedTiles.add(t);
-        t.setOwner(this);
-        t.setContestedOwner(null);
-    }
-    ArrayList<Tile> getOwnedTiles(){
-        return ownedTiles;
-    }
-    double getPercentOfOwned(){
 
-        return 100 * getOwnedTiles().size() / (double)(height*width);
+    protected void setDarkNodes(Node node) {
+        darkNodes.add(node);
+        node.setOwner(this);
+        node.setNotCompleteOwner(null);
     }
 
-    void setContestedTiles(Tile t){
-        contestedTiles.add(t);
-        t.setContestedOwner(this);
+    ArrayList<Node> getDarkNodes() {
+        return darkNodes;
     }
-    ArrayList<Tile> getContestedTiles(){
 
-        return contestedTiles;
+    void setBrightNodes(Node node) {
+        brightNodes.add(node);
+        node.setNotCompleteOwner(this);
     }
-    void setCurrentTile(Tile currentTile) {
 
-        this.currentTile = currentTile;
+    ArrayList<Node> getBrightNodes() {
+        return brightNodes;
     }
+
+    void setThisNode(Node thisNode) {
+        this.thisNode = thisNode;
+    }
+
     String getNameOfPlayer() {
         return nameOfPlayer;
     }
-    public void setAlive(Boolean alive) {
 
-        isAlive = alive;
+    void setDead(Boolean dead) {
+       this. dead = dead;
     }
-
-    public void setY(int y) {
-        this.y = y;
+    void setY(int y){
+        this.y=y;
     }
-
-    public void setX(int x) {
-        this.x = x;
+    void setX(int x){
+        this.x=x;
     }
+    Player(Color color){
+        this.color=color;
+        int randX=(int)(Math.random()*(498)+1);
+        int randY=(int)(Math.random()*(498)+1);
+        double randZ=Math.random();
+        x=randX;
+        y=randY;
+        if(randX<10){
+            x+=10;
+        } else if (randX>490){
+            x-=10;
 
-    public int compare(Player player){
-
-        return Integer.compare(player.getOwnedTiles().size(), ownedTiles.size());
-    }
-
-    Player(int height, int width, Color color){
-        this.height = height;
-        this.width = width;
-        this.color = color;
-
-        x = (int)(Math.random() * (width- 2) +1);
-        y = (int)(Math.random() * (height- 2) +1);
-
-        if(x<5){
-            x+= 5;
-        }else if(x >(width -5)){
-            x-= 5;
         }
-        if(y < 5){
-            y+= 5;
-        }else if(y > (height- 5)){
-            y -= 5;
+        if(randY<10){
+            y+=10;
+        }else if(y>490){
+            y-=10;
         }
-
-        double rand = Math.random();
-        if (rand < 0.25) {
-            dx = 1;
-            dy = 0;
-        } else if (rand <1) {
-            dx = -1;
-            dy = 0;
-        } else if (rand < 0.75) {
-            dx = 0;
-            dy = 1;
-        } else {
-            dx = 0;
-            dy = -1;
-        }
-    }
-
-
-    void die() {
-        isAlive = false;
-        ArrayList<Tile> ownedTilesCopy = (ArrayList<Tile>)ownedTiles.clone();
-        ArrayList<Tile> contestedTilesCopy = (ArrayList<Tile>)contestedTiles.clone();
-        for(int i = 0; i < ownedTilesCopy.size(); i++){
-            ownedTilesCopy.get(i).setOwner(null);
+        if(randZ<=0.25){
+            dX=1;
+            dY=0;
+        }else if(randZ<=0.5&&randZ>0.25){
+            dX=-1;
+            dY=0;
+        } else if (randZ<=0.75&&randZ>0.5) {
+            dX=0;
+            dY=1;
+            
+        }else{
+            dX=0;
+            dY=-1;
         }
 
-        for(int i = 0; i < contestedTilesCopy.size(); i++){
-            contestedTilesCopy.get(i).setContestedOwner(null);
-        }
-
-        currentTile = null;
-        ownedTiles.clear();
-        contestedTiles.clear();
-
     }
-    void removeOwnedTile(Tile t){
-        ownedTiles.remove(t);
+    void killed(){
+        dead=true;
+        ArrayList<Node>darkNodes2;
+        ArrayList<Node>brightNode2;
+        darkNodes2= (ArrayList<Node>) darkNodes.clone();
+        brightNode2= (ArrayList<Node>) brightNodes.clone();
+        for(int i=0;i<darkNodes2.size();i++)
+            darkNodes2.get(i).setOwner(null);
+        for(int j=0;j<brightNode2.size();j++)
+            brightNode2.get(j).setNotCompleteOwner(null);
+
+        brightNodes.clear();
+        darkNodes.clear();
+        thisNode=null;
+
+
     }
     abstract void move();
+    protected void removeDarkNOde(Node node){
+        darkNodes.remove(node);
+    }
+    protected void ChangeBrightToDark(){
+        for (Node node:brightNodes)
+            setDarkNodes(node);
+        brightNodes.clear();
 
-    void contestToOwned(){
-        for (Tile t : contestedTiles) {
-            setOwnedTiles(t);
-        }
-        contestedTiles.clear();
+
+    }
+    protected void Fight(Node node){
+
     }
 
-    void checkAttack(Tile t){
-        if(t.getContestedOwner() != null) {
-            t.getContestedOwner().die();
-        }
+
     }
 
-
-}
