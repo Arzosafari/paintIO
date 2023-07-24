@@ -3,20 +3,18 @@ import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
-import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.*;
 import java.util.Timer;
-import java.util.TimerTask;
 
 public class Game extends JPanel {
     private Node[][] gameArea;
     private ActionListener actionListener;
-    private  final int height=500;
-    private final int width=500;
+    private   int height=500;
+    private  int width=500;
     private final int measure=28;
     private static int smooth=0;
 
-    private final int FinalSpeed;
+    private  int finalSpeed;
     private int enemyNumber;
     private ArrayList<Player> players=new ArrayList<>();
     private MainPlayer mainPlayer;
@@ -28,7 +26,7 @@ public class Game extends JPanel {
         return smooth;
     }
     int getFinalSpeed(){
-         return FinalSpeed;
+         return finalSpeed;
     }
     Game(){
 
@@ -36,7 +34,7 @@ public class Game extends JPanel {
     Game(ActionListener actionListener,String playerName,int speed1,int enemyNumber){
         this.actionListener=actionListener;
         int[] speed={14,12,10,8,6,4,2};
-        this.FinalSpeed=speed[speed1-1];
+        finalSpeed=speed[speed1-1];
         this.enemyNumber=enemyNumber;
         mainPlayer=new MainPlayer();
         players.add(mainPlayer);
@@ -53,8 +51,6 @@ public class Game extends JPanel {
 
 
 
-
-
     }
     private void FixedTime(){
         TimerTask timerTask=new TimerTask() {
@@ -63,7 +59,7 @@ public class Game extends JPanel {
                smooth();
                if (smooth==0)
                    logic();
-               reStart();
+               repaint();
             }
         };
         Timer timer=new Timer();
@@ -132,23 +128,73 @@ public class Game extends JPanel {
         actionMap.put("down",action3);
 
     }
-    static void smooth(){}
-    static void reStart(){}
+    static void smooth(){
+         smooth++;
+         smooth%=finalSpeed;
+    }
+    static void reStar(){}
     private void logic(){
          Player player;
          NodePlayer.clear();
-         int height=500;
-         int width=500;
          for(int i=0;i<players.size();i++){
              players.get(i).move();
              int x=players.get(i).getX();
              int y=players.get(i).getY();
              //unlimited part
-             if(player.getX()<0)
-                 x=500
+             if(players.get(i).getX()<0)
+                 width+=1;
+             if(players.get(i).getX()>=width)
+                 width+=1;
+             if(players.get(i).getY()<0)
+                 height+=1;
+             if(players.get(i).getY()>=height)
+                 height+=1;
+             this.gameArea=new Node[height][width];
+             Node node=getNode(x,y);
+             players.get(i).fight(node);
+             players.get(i).setThisNode(node);
+             findAttack(players.get(i),node);
+             if(players.get(i).getBrightNodes().size()>0){
+                 players.get(i).changeBrightToDark();
+                 dfs(players.get(i));
+             }else if(node.getOwner()!=players.get(i)&&!(players.get(i).getDead())
+             ){players.get(i).setBrightNodes(node);
+
+             }
+             if((players.get(i)instanceof normalEnemy||players.get(i)instanceof smartEnemy)&&players.get(i).getDead())
+                 looserEnemies.add(players.get(i));
+
 
          }
+         makeNormalEnemy();
+         boolean allDead=true;
+         mainPlayer.lastDForKeyBoard();
+         playerDraw.get(mainPlayer).setDraw(!(mainPlayer.getDead()));
+         allDead=allDead&&mainPlayer.getDead();
+         if(allDead){
+             finish();
+         }
+         players.removeIf(Player::getDead);
 
+    }
+    private void finish(){
+         JOptionPane.showMessageDialog(this,"GAME OVER!!!","end game",-1);
+         ActionEvent actionEvent=new ActionEvent(this,0,"GAME OVER");
+         actionListener.actionPerformed(actionEvent);
+    }
+    private void makeNormalEnemy(){
+         for(int i=0;i<looserEnemies.size();i++){
+             if(!(looserEnemies.get(i).getDead())){
+                 int randR=(int)Math.random()*1000;
+                 int randG=(int)Math.random()*1000;
+                 int randB=(int)Math.random()*1000;
+
+                 Player player= new normalEnemy(new Color(randR,randG,randB));
+                 firstPlaceForNormalLevel(player);
+                 players.add(player);
+                 looserEnemies.remove(looserEnemies.get(i));
+             }
+         }
     }
     private void firstPlaceForNormalLevel(Player player){
         if(close(player)){
@@ -186,6 +232,35 @@ public class Game extends JPanel {
     }
     Node getNode(int x,int y){
         return gameArea[x][y];
+    }
+    private void findAttack(Player player,Node node){
+         if(NodePlayer.containsKey(node)){
+             for(Map.Entry<Node,Player> map:NodePlayer.entrySet()){
+                 if(map.getKey()==node){
+                     if(map.getValue().getBrightNodes().size()>player.getBrightNodes().size()){
+                         map.getValue().killed();
+                     }else if(map.getValue().getBrightNodes().size()==player.getBrightNodes().size()){
+                         if(map.getValue().getDarkNodes().size()>player.getDarkNodes().size()){
+                             map.getValue().killed();
+                         }else{
+                             player.killed();
+                         }
+                     } else if (map.getValue().getBrightNodes().size()<player.getBrightNodes().size()) {
+                         player.killed();
+
+                     }
+                 }
+             }
+         }
+         else {
+             NodePlayer.put(node,player);
+         }
+         players.removeIf(Player::getDead);
+
+    }
+    private void dfs(Player player){
+         int
+
     }
 
 

@@ -126,14 +126,14 @@ public abstract class Player {
     protected void removeDarkNode(Node node){
         darkNodes.remove(node);
     }
-    protected void ChangeBrightToDark(){
+    protected void changeBrightToDark(){
         for (Node node:brightNodes)
             setDarkNodes(node);
         brightNodes.clear();
 
 
     }
-    protected void Fight(Node node){
+    protected void fight(Node node){
         if(node.getNotCompleteOwner()!=null)
             node.getNotCompleteOwner().killed();
 
