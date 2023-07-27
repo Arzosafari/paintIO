@@ -47,7 +47,7 @@ class PaintIo extends JFrame implements ActionListener{
                 gameScene.setPaused(false);
                 break;
             case "LEVEL 2":
-                gameScene = new Game(3);
+                gameScene = new Game(this,menuScene.getPlayerName(),   menuScene.getGameSpeed(), menuScene.getEnemyNumber(),true);
                 panel.add(gameScene,"gameScene");
                 cardLayout.show(panel,"gameScene");
                 gameScene.setPaused(false);

@@ -7,8 +7,14 @@ import java.util.*;
 
 public class Game extends JPanel {
     private Node[][] gameArea;
+    private int offsetX, offsetY;
+    private boolean isDragging;
+    private boolean isMoving;
+    private int destinationX, destinationY;
+
     private ActionListener actionListener;
     MouseEvent e;
+    private Point lastDragPoint;
     private final int areaHeight=500;
     private final int areaWidth=500;
 
@@ -24,6 +30,32 @@ public class Game extends JPanel {
 
     private ArrayList<Painter> painters = new ArrayList<>();
     private HashMap<Player, Painter> playerPainterHashMap = new HashMap<>();
+    Game(ActionListener actionListener, String p1name,int gameSpeed, int enemyNumber,boolean hard){
+        this.actionListener=actionListener;
+        this.enemyNumber=enemyNumber;
+        int[] speeds = {16, 14, 12, 10, 8};
+        finalSpeed=speeds[gameSpeed-1];
+        players.add(mainPlayer=new MainPlayer(areaHeight, areaWidth, new Color(102,60,90), p1name));
+        this.gameArea =  new Node[areaWidth][areaHeight];
+        for(int i = 0; i < gameArea.length; i++) {
+            for (int j = 0; j < gameArea[i].length; j++) {
+                gameArea[i][j] = new Node(j, i);
+
+            }
+        }
+
+
+        registerArrowKeyInputs();
+        addSmartEnemy();
+        setBackground(Color.BLACK);
+        timer();
+        painters.add(new Painter( this, mainPlayer, players));
+        playerPainterHashMap.put(mainPlayer, painters.get(0));
+
+
+
+
+    }
 
 
 
@@ -37,15 +69,57 @@ public class Game extends JPanel {
 
 
 
+
         this.gameArea =  new Node[areaWidth][areaHeight];
         for(int i = 0; i < gameArea.length; i++) {
             for (int j = 0; j < gameArea[i].length; j++) {
                 gameArea[i][j] = new Node(j, i);
 
             }
+
+
+
         }
+        addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseClicked(MouseEvent e) {
+                if (!isMoving) {
+                    isMoving = true;
+                    destinationX = e.getX();
+                    destinationY = e.getY();
+
+                } else {
+                    isMoving = false;
+                }
+            }
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+                if (mainPlayer.contains(e.getX(), e.getY())) {
+                    offsetX = e.getX() - mainPlayer.getX(); // Calculate offset for smooth dragging
+                    offsetY = e.getY() - mainPlayer.getY();
+                    isDragging = true;
+                }
+            }
+
+            @Override
+            public void mouseReleased(MouseEvent e) {
+                isDragging = false;
+            }
+        });
+
+        addMouseMotionListener(new MouseAdapter() {
+            @Override
+            public void mouseDragged(MouseEvent e) {
+                if (isDragging) {
+                    mainPlayer.setPosition(e.getX() - offsetX, e.getY() - offsetY);
+                    repaint(); // Trigger repaint to update the player position visually
+                }
+            }
+        });
 
 
+        movePlayerByMouse(mainPlayer);
         registerArrowKeyInputs();
         addNormalEnemy();
         setBackground(Color.BLACK);
@@ -53,9 +127,6 @@ public class Game extends JPanel {
 
         painters.add(new Painter( this, mainPlayer, players));
         playerPainterHashMap.put(mainPlayer, painters.get(0));
-    }
-    Game(int d){
-        finalSpeed=d;
     }
 
 
@@ -89,20 +160,8 @@ public class Game extends JPanel {
 
 
     }
-    public void mouseClicked(MouseEvent e, MainPlayer mainPlayer) {
 
-        if (e.getButton() == MouseEvent.BUTTON3) {
-            // Right mouse button is clicked
-            addKeyListener(new KeyAdapter() {
-                public void keyPressed(KeyEvent e) {
-                    if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-                        // Enter key is pressed while the right mouse button is held down
-                        weaponA(mainPlayer);
-                    }
-                }
-            });
-        }
-    }
+
     private void timer(){
          Timer timer = new Timer();
          TimerTask timerTask=new TimerTask() {
@@ -123,9 +182,9 @@ public class Game extends JPanel {
     }
     private void addNormalEnemy(){
         for( int i = 0; i < enemyNumber; i++){
-            int randR=(int)Math.random()*200;
-            int randG=(int)Math.random()*200;
-            int randB=(int) Math.random()*200;
+            int randR= (int) (Math.random() * 200);
+            int randG= (int) (Math.random() * 200);
+            int randB= (int) (Math.random() * 200);
 
                 players.add(new normalEnemy(gameArea.length,gameArea[0].length,
                         new Color(randR,randG,randB)));
@@ -136,12 +195,39 @@ public class Game extends JPanel {
             if(!notClose(players.get(i))){
                 players.remove(players.get(i));
                 i--;
-                int randR=(int)Math.random()*200;
-                int randG=(int)Math.random()*200;
-                int randB=(int) Math.random()*200;
+                int randR= (int) (Math.random() * 200);
+                int randG= (int) (Math.random() * 200);
+                int randB= (int) (Math.random() * 200);
 
                 players.add(new normalEnemy(gameArea.length,gameArea[0].length,
                         new Color(randR,randG,randB)));
+
+            }else {
+                firstPlace(players.get(i));
+            }
+        }
+
+    }
+    private void addSmartEnemy(){
+        for( int i = 0; i < enemyNumber; i++){
+            int randR= (int) (Math.random() * 200);
+            int randG= (int) (Math.random() * 200);
+            int randB= (int) (Math.random() * 200);
+
+            players.add(new SmartEnemy(gameArea.length,gameArea[0].length,
+                    new Color(randR,randG,randB),mainPlayer));
+
+        }
+        for( int i = 0; i < players.size(); i++){
+            if(!notClose(players.get(i))){
+                players.remove(players.get(i));
+                i--;
+                int randR= (int) (Math.random() * 200);
+                int randG= (int) (Math.random() * 200);
+                int randB= (int) (Math.random() * 200);
+
+                players.add(new SmartEnemy(gameArea.length,gameArea[0].length,
+                        new Color(randR,randG,randB),mainPlayer));
 
             }else {
                 firstPlace(players.get(i));
@@ -291,8 +377,7 @@ public class Game extends JPanel {
                 }
             }
         }
-        return true;//if no body is close
-    }
+        return true;}
 
     /**
      * Overrides paintComponent and is called whenever everything should be drawn on the screen
@@ -328,7 +413,6 @@ public class Game extends JPanel {
             if (y < 0) y = areaHeight -1 ;
             if (y >= areaHeight) y = areaHeight-1;
             player.setAlive(true);
-
             Node node = getTile(x, y);
             player.checkAttack(node);
             player.setCurrentTile(node);
@@ -397,11 +481,6 @@ public class Game extends JPanel {
         // If corresponding tile is found in tilePlayerMap
         if(tilePlayerHashMap.containsKey(node)) {
 
-            // Iterate through all entries in tilePlayerMap, if the Tile in entry matches Tile in input,
-            // compare sizes between players and destroy one of them. The player with the largest tiles contested
-            // survives. If both players have the same amount of tiles contested, the player with the most tiles
-            // owned survives. If both players have the same amount of tiles contested and tiles owned,
-            // the first player added to Players list dies.
             for(Map.Entry<Node, Player> entry : tilePlayerHashMap.entrySet()) {
                 if (entry.getKey() == node) {
                     if (entry.getValue().getContestedTiles().size() > player.getContestedTiles().size()) {
@@ -432,14 +511,7 @@ public class Game extends JPanel {
         smooth %= finalSpeed;
     }
 
-    /**
-     * After a player has traveled out to enclose an area the area needs to be filled. This method depends on that the
-     * Player.contestedToOwned() method has been called. The method works by doing a depth first search from each tile
-     * adjacent to a tile owned by the player sent as parameter. If the DFS algorithm finds a boundary we know it is not
-     * enclosed and should not be filled. The boundary is the smallest rectangle surrounding all owned tiles by the
-     * player to minimize cost of method. If the DFS can't find the boundary or if the one the DFS starts on we know it
 
-     */
     private void fillEnclosure(Player player) {
 
         int maxX = 0;
@@ -513,26 +585,16 @@ public class Game extends JPanel {
         }
     }
 
-    /**
-     * Set board to paused mode, meaning logic and graphics are not updated
-     * @param b True if game should be paused, false otherwise
-     */
+
     void setPaused(Boolean b){
         paused = b;
     }
 
-    /**
-     * Get height of game area
-     * @return height of game area
-     */
+
     int getAreaHeight() {
         return areaHeight;
     }
 
-    /**
-     * Get width of game area
-     * @return width of game area
-     */
     int getAreaWidth() {
         return areaWidth;
     }

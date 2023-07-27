@@ -13,12 +13,7 @@ class normalEnemy extends Player{
 
 
 
-    /**
-     * Constructs a new BotPLayer on a random spot on the game area with specified color with a randomized direction
-     * @param height height of game area player is constructed in
-     * @param width width of game area player is constructed in
-     * @param color the color of the player
-     */
+
     normalEnemy(int height, int width, Color color){
         super(height, width, color);
         this.nameOfPlayer = "ENEMY";

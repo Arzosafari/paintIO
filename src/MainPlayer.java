@@ -25,6 +25,15 @@ public class MainPlayer extends Player {
         y=250;
 
     }
+    public void setPosition(int x, int y) {
+        this.x = x;
+        this.y = y;
+    }
+    public boolean contains(int mouseX, int mouseY) {
+        return mouseX >= x && mouseX <= x + width && mouseY >= y && mouseY <= y + height;
+    }
+
+
 
 
     void updateDirection() {

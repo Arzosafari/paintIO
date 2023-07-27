@@ -13,7 +13,7 @@ public abstract class Player implements Comparable<Player> {//
     int height,width;
     private Color color;
     private Boolean isAlive = true;
-    private Node currentNode;
+    public Node currentNode;
     private ArrayList<Node> ownedNodes = new ArrayList<>();
     private ArrayList<Node> contestedNodes = new ArrayList<>();
     Boolean getAlive() {
@@ -133,6 +133,7 @@ public abstract class Player implements Comparable<Player> {//
         }
         contestedNodes.clear();
     }
+
 
     void checkAttack(Node t){
         if(t.getContestedOwner() != null) {
