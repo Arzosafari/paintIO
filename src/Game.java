@@ -1,268 +1,570 @@
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyEvent;
-import java.util.*;
+import java.awt.event.*;
 import java.util.Timer;
+import java.util.*;
+
 
 public class Game extends JPanel {
     private Node[][] gameArea;
     private ActionListener actionListener;
-    private   int height=500;
-    private  int width=500;
-    private final int measure=28;
-    private static int smooth=0;
+    MouseEvent e;
+    private final int areaHeight=500;
+    private final int areaWidth=500;
 
-    private  int finalSpeed;
+    private int smooth = 0;
+    private final int finalSpeed;
     private int enemyNumber;
-    private ArrayList<Player> players=new ArrayList<>();
+    private ArrayList<Player> players = new ArrayList<>();
     private MainPlayer mainPlayer;
-    private HashMap<Node,Player> NodePlayer=new HashMap<Node,Player>();
-    private ArrayList<Player> looserEnemies=new ArrayList<>();
-    private ArrayList<Draw> draw=new ArrayList<>();
-    private HashMap<Player,Draw> playerDraw=new HashMap<>();
-     int getSmooth(){
-        return smooth;
-    }
-    int getFinalSpeed(){
-         return finalSpeed;
-    }
-    Game(){
+    private HashMap<Node, Player> tilePlayerHashMap = new HashMap<>();
 
-    }
-    Game(ActionListener actionListener,String playerName,int speed1,int enemyNumber){
-        this.actionListener=actionListener;
-        int[] speed={14,12,10,8,6,4,2};
-        finalSpeed=speed[speed1-1];
-        this.enemyNumber=enemyNumber;
-        mainPlayer=new MainPlayer();
-        players.add(mainPlayer);
-        this.gameArea=new Node[500][500];
-        for(int i=0;i<500;i++){
-            for(int j=0;j<gameArea[i].length;j++){
-                gameArea[i][j]=new Node(j,i);
+    private ArrayList<Player> looserEnemy = new ArrayList<>();
+    private boolean paused = true;
+
+    private ArrayList<Painter> painters = new ArrayList<>();
+    private HashMap<Player, Painter> playerPainterHashMap = new HashMap<>();
+
+
+
+    Game(ActionListener actionListener, String p1name,int gameSpeed, int enemyNumber){
+        this.actionListener = actionListener;
+        this.enemyNumber = enemyNumber;
+        int[] speeds = {12, 10, 8, 6, 4};
+        finalSpeed = speeds[gameSpeed - 1];
+
+        players.add(mainPlayer=new MainPlayer(areaHeight, areaWidth, new Color(102,40,75), p1name));
+
+
+
+        this.gameArea =  new Node[areaWidth][areaHeight];
+        for(int i = 0; i < gameArea.length; i++) {
+            for (int j = 0; j < gameArea[i].length; j++) {
+                gameArea[i][j] = new Node(j, i);
+
             }
         }
-        keyEvent();
-        addNormalEnemy();
-        setBackground(Color.PINK);
-        FixedTime();
 
+
+        registerArrowKeyInputs();
+        addNormalEnemy();
+        setBackground(Color.BLACK);
+        timer();
+
+        painters.add(new Painter( this, mainPlayer, players));
+        playerPainterHashMap.put(mainPlayer, painters.get(0));
+    }
+    Game(int d){
+        finalSpeed=d;
+    }
+
+
+
+    private void weaponA(MainPlayer currentPlayer){
+        int x=currentPlayer.getX();
+        int y=currentPlayer.getY();
+        int dx=currentPlayer.getDx();
+        int dy=currentPlayer.getDy();
+        Node[][] nodes =new Node[x+1][y+7];
+        int newX;
+        int newY;
+        if(dx==0){
+            for(int i=x-1;i<=x+1;i++){
+                for(int j=y+5;j<=y+7;j++){
+                    Node node = nodes[i][j];
+                    currentPlayer.setOwnedTiles(node);
+
+                }
+            }
+
+        } else if (dy==0) {
+            for(int i=x+5;i<=x+7;i++){
+                for (int j=y-1;j<=y+1;j++){
+                    Node node = nodes[i][j];
+                    currentPlayer.setOwnedTiles(node);
+                }
+            }
+
+        }
 
 
     }
-    private void FixedTime(){
-        TimerTask timerTask=new TimerTask() {
-            @Override
-            public void run() {
-               smooth();
-               if (smooth==0)
-                   logic();
-               repaint();
-            }
-        };
-        Timer timer=new Timer();
-        timer.scheduleAtFixedRate(timerTask,0,1000/60);
+    public void mouseClicked(MouseEvent e, MainPlayer mainPlayer) {
+
+        if (e.getButton() == MouseEvent.BUTTON3) {
+            // Right mouse button is clicked
+            addKeyListener(new KeyAdapter() {
+                public void keyPressed(KeyEvent e) {
+                    if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                        // Enter key is pressed while the right mouse button is held down
+                        weaponA(mainPlayer);
+                    }
+                }
+            });
+        }
+    }
+    private void timer(){
+         Timer timer = new Timer();
+         TimerTask timerTask=new TimerTask() {
+             @Override
+             public void run() {
+                 if(!paused) {
+                     smooth();
+                     if (smooth == 0) {
+                         logic();
+                     }
+                     repaint();
+                 }
+             }
+         };
+        timer.scheduleAtFixedRate(timerTask,
+                0, 1000/60);
+
     }
     private void addNormalEnemy(){
+        for( int i = 0; i < enemyNumber; i++){
+            int randR=(int)Math.random()*200;
+            int randG=(int)Math.random()*200;
+            int randB=(int) Math.random()*200;
 
-        for(int i=0;i<enemyNumber;i++){
-            int randR=(int)Math.random()*100;
-            int randG=(int)Math.random()*100;
-            int randB=(int)Math.random()*100;
-            Color color=new Color(randR,randG,randB);
-            players.add(new normalEnemy(color));}
-            for(int i=0;i<players.size();i++){
-                int randR=(int)Math.random()*100;
-                int randG=(int)Math.random()*100;
-                int randB=(int)Math.random()*100;
-                if(close(players.get(i))){
-                    players.remove(players.get(i));
-                    i--;
-                    players.add(new normalEnemy(new Color(randR,randG,randB)));
-                }else
-                    firstPlaceForNormalLevel(players.get(i));
+                players.add(new normalEnemy(gameArea.length,gameArea[0].length,
+                        new Color(randR,randG,randB)));
 
-            }
-
-
-    }
-    private void keyEvent(){
-        InputMap inputMap=getInputMap(2);
-        ActionMap actionMap=getActionMap();
-        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_LEFT,0),"left");
-        AbstractAction action=new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                mainPlayer.setId(37);//left
-            }
-        };
-        actionMap.put("left",action);
-
-        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT,0),"right");
-        AbstractAction action1=new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                mainPlayer.setId(39);//right
-            }
-        };
-        actionMap.put("right",action1);
-
-        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_UP,0),"up");
-        AbstractAction action2=new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                mainPlayer.setId(40);
-            }
-        };
-        actionMap.put("up",action2);
-
-        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_DOWN,0),"down");
-        AbstractAction action3=new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                mainPlayer.setId(38);
-            }
-        };
-        actionMap.put("down",action3);
-
-    }
-    static void smooth(){
-         smooth++;
-         smooth%=finalSpeed;
-    }
-    static void reStar(){}
-    private void logic(){
-         Player player;
-         NodePlayer.clear();
-         for(int i=0;i<players.size();i++){
-             players.get(i).move();
-             int x=players.get(i).getX();
-             int y=players.get(i).getY();
-             //unlimited part
-             if(players.get(i).getX()<0)
-                 width+=1;
-             if(players.get(i).getX()>=width)
-                 width+=1;
-             if(players.get(i).getY()<0)
-                 height+=1;
-             if(players.get(i).getY()>=height)
-                 height+=1;
-             this.gameArea=new Node[height][width];
-             Node node=getNode(x,y);
-             players.get(i).fight(node);
-             players.get(i).setThisNode(node);
-             findAttack(players.get(i),node);
-             if(players.get(i).getBrightNodes().size()>0){
-                 players.get(i).changeBrightToDark();
-                 dfs(players.get(i));
-             }else if(node.getOwner()!=players.get(i)&&!(players.get(i).getDead())
-             ){players.get(i).setBrightNodes(node);
-
-             }
-             if((players.get(i)instanceof normalEnemy||players.get(i)instanceof smartEnemy)&&players.get(i).getDead())
-                 looserEnemies.add(players.get(i));
-
-
-         }
-         makeNormalEnemy();
-         boolean allDead=true;
-         mainPlayer.lastDForKeyBoard();
-         playerDraw.get(mainPlayer).setDraw(!(mainPlayer.getDead()));
-         allDead=allDead&&mainPlayer.getDead();
-         if(allDead){
-             finish();
-         }
-         players.removeIf(Player::getDead);
-
-    }
-    private void finish(){
-         JOptionPane.showMessageDialog(this,"GAME OVER!!!","end game",-1);
-         ActionEvent actionEvent=new ActionEvent(this,0,"GAME OVER");
-         actionListener.actionPerformed(actionEvent);
-    }
-    private void makeNormalEnemy(){
-         for(int i=0;i<looserEnemies.size();i++){
-             if(!(looserEnemies.get(i).getDead())){
-                 int randR=(int)Math.random()*1000;
-                 int randG=(int)Math.random()*1000;
-                 int randB=(int)Math.random()*1000;
-
-                 Player player= new normalEnemy(new Color(randR,randG,randB));
-                 firstPlaceForNormalLevel(player);
-                 players.add(player);
-                 looserEnemies.remove(looserEnemies.get(i));
-             }
-         }
-    }
-    private void firstPlaceForNormalLevel(Player player){
-        if(close(player)){
-            Player player1=new normalEnemy(player.getColor());
-            firstPlaceForNormalLevel(player1);
         }
-        for (int i=player.getX()-2;i<=player.getY()+2;i++){
-            for(int j=player.getY()-2;i<=player.getY()+2;j++){
-            player.setDarkNodes(getNode(i,j));
+
+        for( int i = 0; i < players.size(); i++){
+            if(!notClose(players.get(i))){
+                players.remove(players.get(i));
+                i--;
+                int randR=(int)Math.random()*200;
+                int randG=(int)Math.random()*200;
+                int randB=(int) Math.random()*200;
+
+                players.add(new normalEnemy(gameArea.length,gameArea[0].length,
+                        new Color(randR,randG,randB)));
+
+            }else {
+                firstPlace(players.get(i));
             }
         }
 
-
     }
-    private boolean close(Player player){
-        for(int i=player.getX()-4;i<=player.getX()+4;i++){
-            for(int j=player.getY()-4;j<=player.getY()+4;j++){
-                if(getNode(i,j).getNotCompleteOwner()!=null||getNode(i,j).getOwner()!=null){
-                    return true;
+
+
+    private void registerArrowKeyInputs() {
+        getInputMap(WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_UP, 0), "moveUP");
+        getActionMap().put("moveUP", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                mainPlayer.setNextKey(KeyEvent.VK_UP);
+            }
+
+            @Override
+            public boolean isEnabled() {
+                return true;
+            }
+
+            @Override
+            public void putValue(String key, Object value) {
+                // Do nothing
+            }
+        });
+
+        getInputMap(WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_DOWN, 0), "moveDOWN");
+        getActionMap().put("moveDOWN", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                mainPlayer.setNextKey(KeyEvent.VK_DOWN);
+            }
+
+            @Override
+            public boolean isEnabled() {
+                return true;
+            }
+
+            @Override
+            public void putValue(String key, Object value) {
+                // Do nothing
+            }
+        });
+
+        getInputMap(WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, 0), "moveLEFT");
+        getActionMap().put("moveLEFT", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                mainPlayer.setNextKey(KeyEvent.VK_LEFT);
+            }
+
+            @Override
+            public boolean isEnabled() {
+                return true;
+            }
+
+            @Override
+            public void putValue(String key, Object value) {
+                // Do nothing
+            }
+        });
+
+        getInputMap(WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, 0), "moveRIGHT");
+        getActionMap().put("moveRIGHT", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                mainPlayer.setNextKey(KeyEvent.VK_RIGHT);
+            }
+
+            @Override
+            public boolean isEnabled() {
+                return true;
+            }
+
+            @Override
+            public void putValue(String key, Object value) {
+                // Do nothing
+            }
+        });
+    }
+
+
+    private void movePlayerByMouse(Player player) {
+        // Add a mouse listener to the game panel
+        addMouseMotionListener(new MouseMotionAdapter() {
+            public void mouseDragged(MouseEvent e) {
+                // Compute the distance and direction of the mouse drag
+                int distX = e.getX() - player.getX();
+                int distY = e.getY() - player.getY();
+
+                // Determine the direction of movement based on the distance
+                if (Math.abs(distX) > Math.abs(distY)) {
+                    // Move left or right
+                    if (distX < 0) {
+                        ((MainPlayer) player).setNextKey(KeyEvent.VK_LEFT);
+                        player.setX(player.getX() - finalSpeed);
+                    } else {
+                        ((MainPlayer) player).setNextKey(KeyEvent.VK_RIGHT);
+                        player.setX(player.getX() + finalSpeed);
+                    }
+                } else {
+                    // Move up or down
+                    if (distY < 0) {
+                        ((MainPlayer) player).setNextKey(KeyEvent.VK_UP);
+                        player.setY(player.getY() - finalSpeed);
+                    } else {
+                        ((MainPlayer) player).setNextKey(KeyEvent.VK_DOWN);
+                        player.setY(player.getY() + finalSpeed);
+                    }
+                }
+
+
+            }
+        });
+    }
+
+
+    /**
+     * Marks all tiles in the starting area of a player to owned by player
+     * @param player player to generate starting area for
+     */
+    private void firstPlace(Player player){
+        int x = player.getX();
+        int y = player.getY();
+        if(!notClose(player)){
+            Player player2 = new normalEnemy(gameArea.length,gameArea[0].length, player.getColor());
+            firstPlace(player2);
+        }
+        for(int i = x-1; i <= x+1; i++){
+            for(int j = y-1; j <= y+1; j++){
+                player.setOwnedTiles(getTile(i,j));
+            }
+        }
+    }
+
+
+
+    private boolean notClose(Player player){
+        int x = player.getX();
+        int y = player.getY();
+        for(int i = x-3; i <= x+3; i++) {
+            for (int j = y - 3; j <= y + 3; j++) {
+                if (getTile(i, j).getOwner() != null || getTile(i, j).getContestedOwner() != null ) {
+                    return false;
                 }
             }
         }
-        return false;
+        return true;//if no body is close
     }
+
+    /**
+     * Overrides paintComponent and is called whenever everything should be drawn on the screen
+     * @param g Graphics element used to draw elements on screen
+     */
     @Override
-    public void paintComponent(Graphics g){
+    public void paintComponent(Graphics g) {
         super.paintComponent(g);
-        for(int i=0;i<draw.size();i++){
-            g.setClip(500/draw.size()*i,0,500/draw.size(),500);
-            g.translate(500/draw.size()*i,0);
-            draw.get(i).GraphicRender(g);
-            g.translate(-500/draw.size()*i,0);
-            Toolkit.getDefaultToolkit().sync();
+        for(int i = 0; i < painters.size(); i++){
+            g.setClip(getWidth()/painters.size() * i,0,getWidth()/painters.size(),getHeight());
+            g.translate(getWidth()/painters.size() * i,0);
+            painters.get(i).rendering(g);
+
+            g.translate(-getWidth()/painters.size() * i,0);
+        }
+
+        Toolkit.getDefaultToolkit().sync();
+    }
+
+
+
+    private void logic(){
+        Player player;
+        tilePlayerHashMap.clear();
+        for (int i = 0; i < players.size(); i++) {
+            player = players.get(i);
+            player.move();
+            int x = player.getX();
+            int y = player.getY();
+            // unlimited part
+            if (x < 0) x = areaWidth -1 ;
+            if (x >= areaWidth)x= areaWidth-1;
+            if (y < 0) y = areaHeight -1 ;
+            if (y >= areaHeight) y = areaHeight-1;
+            player.setAlive(true);
+
+            Node node = getTile(x, y);
+            player.checkAttack(node);
+            player.setCurrentTile(node);
+            findCollision(player, node);
+
+
+           if (node.getOwner() != player && player.getAlive()) {
+               player.setContestedTiles(node);
+
+            } else if (player.getContestedTiles().size() > 0) {
+                player.contestToOwned();
+                fillEnclosure(player);
+            }
+
+            // If BotPlayer is killed, add it to deadBots list
+            if (player instanceof normalEnemy && !player.getAlive()) {
+                looserEnemy.add(player);
+            }
+        }
+        renewBots();
+
+        boolean allKilled = true;
+
+            mainPlayer.updateDirection();
+            // Sets painter to stop drawing if humanPlayer is dead
+            playerPainterHashMap.get(mainPlayer).setDraw(mainPlayer.getAlive());
+            allKilled = allKilled && !mainPlayer.getAlive();
+
+        if (allKilled) {
+            endGame();
+        }
+
+// Remove dead players
+        players.removeIf(p -> !p.getAlive());
+    }
+
+    /**
+     * Method to end game and tell this to PaperIO class
+     */
+    private void endGame(){
+        JOptionPane.showMessageDialog(this, "YOU LOST!, GAME OVER...", "GAME OVER", JOptionPane.PLAIN_MESSAGE);
+        actionListener.actionPerformed(new ActionEvent(this, 0, "GAME OVER"));
+    }
+
+    /**
+     * Method that respawns dead bots after a set interval
+     */
+    private void renewBots(){
+        for(int i = 0; i < looserEnemy.size(); i++){
+            if(looserEnemy.get(i).getAlive()){
+                Player player = new normalEnemy(gameArea.length,gameArea[0].length,
+                        new Color((int)(Math.random() * 0x1000000)));
+                firstPlace(player);
+                players.add(player);
+                looserEnemy.remove(looserEnemy.get(i));
+            }
         }
     }
-    Node getNode(int x,int y){
-        return gameArea[x][y];
+
+    /**
+     * Method that detects player-to-player head on collision
+     * @param player Player you want to check collision for
+     * @param node   Tile that Player currently is on
+     */
+    private void findCollision(Player player, Node node) {
+        // If corresponding tile is found in tilePlayerMap
+        if(tilePlayerHashMap.containsKey(node)) {
+
+            // Iterate through all entries in tilePlayerMap, if the Tile in entry matches Tile in input,
+            // compare sizes between players and destroy one of them. The player with the largest tiles contested
+            // survives. If both players have the same amount of tiles contested, the player with the most tiles
+            // owned survives. If both players have the same amount of tiles contested and tiles owned,
+            // the first player added to Players list dies.
+            for(Map.Entry<Node, Player> entry : tilePlayerHashMap.entrySet()) {
+                if (entry.getKey() == node) {
+                    if (entry.getValue().getContestedTiles().size() > player.getContestedTiles().size()) {
+                        entry.getValue().die();
+                    } else if (entry.getValue().getContestedTiles().size() < player.getContestedTiles().size()) {
+                        player.die();
+                    } else if (entry.getValue().getContestedTiles().size() == player.getContestedTiles().size()) {
+                        if (entry.getValue().getOwnedTiles().size() > player.getOwnedTiles().size()) {
+                            entry.getValue().die();
+                        } else {
+                            player.die();
+                        }
+                    }
+                }
+            }
+        }else { // If no corresponding tile is found, add tile and player to tilePlayerMap
+            tilePlayerHashMap.put(node, player);
+        }
+        // Remove dead players(lambda)
+        players.removeIf(p -> !p.getAlive());
     }
-    private void findAttack(Player player,Node node){
-         if(NodePlayer.containsKey(node)){
-             for(Map.Entry<Node,Player> map:NodePlayer.entrySet()){
-                 if(map.getKey()==node){
-                     if(map.getValue().getBrightNodes().size()>player.getBrightNodes().size()){
-                         map.getValue().killed();
-                     }else if(map.getValue().getBrightNodes().size()==player.getBrightNodes().size()){
-                         if(map.getValue().getDarkNodes().size()>player.getDarkNodes().size()){
-                             map.getValue().killed();
-                         }else{
-                             player.killed();
-                         }
-                     } else if (map.getValue().getBrightNodes().size()<player.getBrightNodes().size()) {
-                         player.killed();
 
-                     }
-                 }
-             }
-         }
-         else {
-             NodePlayer.put(node,player);
-         }
-         players.removeIf(Player::getDead);
-
-    }
-    private void dfs(Player player){
-         int
-
+    /**
+     * Controls tick counter of game which is needed to make game smooth.
+     */
+    private void smooth(){
+        smooth++;
+        smooth %= finalSpeed;
     }
 
+    /**
+     * After a player has traveled out to enclose an area the area needs to be filled. This method depends on that the
+     * Player.contestedToOwned() method has been called. The method works by doing a depth first search from each tile
+     * adjacent to a tile owned by the player sent as parameter. If the DFS algorithm finds a boundary we know it is not
+     * enclosed and should not be filled. The boundary is the smallest rectangle surrounding all owned tiles by the
+     * player to minimize cost of method. If the DFS can't find the boundary or if the one the DFS starts on we know it
 
+     */
+    private void fillEnclosure(Player player) {
+
+        int maxX = 0;
+        int minX = gameArea[0].length;
+        int maxY = 0;
+        int minY = gameArea.length;
+        for (Node t : player.getOwnedTiles()) {
+            if(t.getX() > maxX) maxX = t.getX();
+            if(t.getX() < minX) minX = t.getX();
+            if(t.getY() > maxY) maxY = t.getY();
+            if(t.getY() < minY) minY = t.getY();
+        }
+
+
+        ArrayList<Node> outside = new ArrayList<>();
+        ArrayList<Node> inside  = new ArrayList<>();
+        ArrayList<Node> visited = new ArrayList<>();
+        HashSet<Node> toCheck = new HashSet<>();
+
+
+        int y;
+        int x;
+        for(Node t : player.getOwnedTiles()){
+            y = t.getY();
+            x = t.getX();
+            if(y -1 >= 0) toCheck.add(gameArea[y-1][x]);
+            if(y + 1 < gameArea.length) toCheck.add(gameArea[y+1][x]);
+            if(x - 1 >= 0) toCheck.add(gameArea[y][x-1]);
+            if(x + 1 < gameArea[y].length) toCheck.add(gameArea[y][x+1]);
+        }
+
+
+
+        for(Node t : toCheck){
+            if(!inside.contains(t)){
+                Stack<Node> stack = new Stack<>();
+                boolean cont = true;
+                Node v;
+                visited.clear();
+
+                stack.push(t);
+                while((!stack.empty()) && cont){
+                    v = stack.pop();
+                    if(!visited.contains(v) && (v.getOwner() != player)){
+                        y = v.getY();
+                        x = v.getX();
+                        if(outside.contains(v) //If already declared as outside
+                                || x < minX || x > maxX || y < minY || y > maxY //If outside of boundary
+                                || x == gameArea[0].length -1 || x == 0 || y == 0 || y == gameArea.length -1){ // If it is a edge tile
+                            cont = false;
+                        }else{
+                            visited.add(v);
+                            if(y -1 >= 0) stack.push(gameArea[y-1][x]);
+                            if(y + 1 < gameArea.length) stack.push(gameArea[y+1][x]);
+                            if(x - 1 >= 0) stack.push(gameArea[y][x-1]);
+                            if(x + 1 < gameArea[y].length) stack.push(gameArea[y][x+1]);
+                        }
+                    }
+                }
+                if(cont){
+                    inside.addAll(visited);
+                }else{
+                    outside.addAll(visited);
+                }
+            }
+        }
+
+
+        for(Node t : inside){
+            player.setOwnedTiles(t);
+        }
+    }
+
+    /**
+     * Set board to paused mode, meaning logic and graphics are not updated
+     * @param b True if game should be paused, false otherwise
+     */
+    void setPaused(Boolean b){
+        paused = b;
+    }
+
+    /**
+     * Get height of game area
+     * @return height of game area
+     */
+    int getAreaHeight() {
+        return areaHeight;
+    }
+
+    /**
+     * Get width of game area
+     * @return width of game area
+     */
+    int getAreaWidth() {
+        return areaWidth;
+    }
+
+    /**
+     * Get current tick counter
+     * @return current tick counter
+     */
+    int getSmooth() {
+        return smooth;
+    }
+
+    /**
+     * Get how often tick is reset, impacting speed of game
+     * @return how often tick is reset
+     */
+    int getTickReset() {
+        return finalSpeed;
+    }
+
+    /**
+     * Get tile at position (x,y)
+     * @param x x position of tile
+     * @param y y position of tile
+     * @return tile at position (x,y)
+     */
+    Node getTile(int x, int y){
+        return gameArea[y][x];
+    }
+
+    /**
+     * ScheduleTask is responsible for receiving and responding to timer calls
+     */
 
 }

@@ -1,47 +1,68 @@
+
 import java.awt.*;
 
-public class Node {
-    private Player owner;
-    private Player notCompleteOwner;
+class Node {
+    public static final int EMPTY_COLOR = -1;
+    private Player completeOwner;
+    private Player contestedOwner;
 
+    private Color ownColor;
     private int x,y;
-    int getX(){
+    Node(int x, int y){
+        this.x = x;
+        this.y = y;
+    }
+    int getX() {
+
         return x;
     }
-    int getY(){
+
+    int getY() {
+
         return y;
     }
-    Node(int x,int y){
-        this.x=x;
-        this.y=y;
-    }
-    Player getNotCompleteOwner(){
-        return notCompleteOwner;
-    }
-    void setNotCompleteOwner(Player notCompleteOwner){
-        this.notCompleteOwner=notCompleteOwner;
-    }
-    Player getOwner(){
-        return owner;
-    }
-    void setOwner(Player owner){
-        if(this.owner!=null){
-            this.owner.removeDarkNode(this);
-        }
-        this.owner=owner;
-    }
-    Color getColor(){
-        if(owner!=null&&notCompleteOwner==null)
-            return owner.getColor().darker();
-        else if((owner==null&&notCompleteOwner!=null)||owner!=null&&notCompleteOwner!=owner){
-            int colorR=notCompleteOwner.getColor().getRed();
-            int colorG=notCompleteOwner.getColor().getGreen();
-            int colorB=notCompleteOwner.getColor().getBlue();
-            return new Color(colorR,colorG,colorB,150);
+    Player getContestedOwner() {
 
+        return contestedOwner;
+    }
+    void setContestedOwner(Player contestedOwner) {
+
+        this.contestedOwner = contestedOwner;
+    }
+    Player getOwner() {
+        return completeOwner;
+    }
+
+    void setOwner(Player completeOwner) {
+        if(this.completeOwner != null){
+            this.completeOwner.removeOwnedTile(this);
         }
-        else {
-            return Color.PINK;
+        this.completeOwner = completeOwner;
+    }
+
+    Color getColor() {
+        if (completeOwner != null && contestedOwner == null) {
+            return completeOwner.getColor().darker();
+
+        } else if (completeOwner == null && contestedOwner != null) {
+            int colorRed=contestedOwner.getColor().getRed();
+            int colorGreen=contestedOwner.getColor().getGreen();
+            int colorBlue= contestedOwner.getColor().getBlue();
+            return new Color(colorRed, colorGreen,colorBlue).brighter();
+
+        } else if (completeOwner != null && contestedOwner != completeOwner) {
+            float[] completeHSB = Color.RGBtoHSB(completeOwner.getColor().getRed(),
+                    completeOwner.getColor().getGreen(), completeOwner.getColor().getBlue(), null);
+            float[] contestedHSB = Color.RGBtoHSB(contestedOwner.getColor().getRed(),
+                    contestedOwner.getColor().getGreen(), contestedOwner.getColor().getBlue(), null);
+            float blendedHue = (completeHSB[0] + contestedHSB[0]) / 2.0f;
+            float blendedSaturation = (completeHSB[1] + contestedHSB[1]) / 2.0f;
+            float blendedBrightness = (completeHSB[2] + contestedHSB[2]) / 2.0f;
+            return Color.getHSBColor(blendedHue, blendedSaturation, blendedBrightness);
+        } else {
+            return ((x + y) % 2 == 0) ? Color.PINK : Color.BLACK;
         }
     }
+
+
 }

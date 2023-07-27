@@ -1,144 +1,144 @@
 import java.awt.*;
 import java.util.ArrayList;
 
-public abstract class Player {
-    int x, y;
-    int dX, dY;
+public abstract class Player implements Comparable<Player> {//
+    int x,y,dx,dy;
+    public static final int NORTH = 0;
+    public static final int EAST = 1;
+    public static final int SOUTH = 2;
+    public static final int WEST = 3;
+    public int lastX;
+    public int lastY;
     String nameOfPlayer;
+    int height,width;
     private Color color;
-    private Boolean dead = false;
-    private Node thisNode;
-    private ArrayList<Node> darkNodes = new ArrayList<>();
-    private ArrayList<Node> brightNodes = new ArrayList<>();
-
-    int getX() {
+    private Boolean isAlive = true;
+    private Node currentNode;
+    private ArrayList<Node> ownedNodes = new ArrayList<>();
+    private ArrayList<Node> contestedNodes = new ArrayList<>();
+    Boolean getAlive() {
+        return isAlive;
+    }
+    int getX(){
         return x;
     }
-
-    int getY() {
+    int getY(){
         return y;
     }
-
-    Boolean getDead() {
-        return dead;
-    }
-
     int getDx() {
-        return dX;
-    }
 
+        return dx;
+    }
     int getDy() {
-        return dY;
+
+        return dy;
     }
 
-    Color getColor() {
+    Color getColor(){
+
         return color;
     }
-
-    protected void setDarkNodes(Node node) {
-        darkNodes.add(node);
-        node.setOwner(this);
-        node.setNotCompleteOwner(null);
+    void setOwnedTiles(Node t){
+        ownedNodes.add(t);
+        t.setOwner(this);
+        t.setContestedOwner(null);
+    }
+    ArrayList<Node> getOwnedTiles(){
+        return ownedNodes;
     }
 
-    ArrayList<Node> getDarkNodes() {
-        return darkNodes;
-    }
 
-    void setBrightNodes(Node node) {
-        brightNodes.add(node);
-        node.setNotCompleteOwner(this);
+    void setContestedTiles(Node t){
+        contestedNodes.add(t);
+        t.setContestedOwner(this);
     }
+    ArrayList<Node> getContestedTiles(){
 
-    ArrayList<Node> getBrightNodes() {
-        return brightNodes;
+        return contestedNodes;
     }
+    void setCurrentTile(Node currentNode) {
 
-    void setThisNode(Node thisNode) {
-        this.thisNode = thisNode;
+        this.currentNode = currentNode;
     }
-
     String getNameOfPlayer() {
         return nameOfPlayer;
     }
+    public void setAlive(Boolean alive) {
 
-    void setDead(Boolean dead) {
-       this. dead = dead;
+        isAlive = alive;
     }
-    void setY(int y){
-        this.y=y;
-    }
-    void setX(int x){
-        this.x=x;
-    }
-    Player(Color color){
-        this.color=color;
-        int randX=(int)(Math.random()*(498)+1);
-        int randY=(int)(Math.random()*(498)+1);
-        double randZ=Math.random();
-        x=randX;
-        y=randY;
-        if(randX<10){
-            x+=10;
-        } else if (randX>490){
-            x-=10;
 
+    public void setY(int y) {
+        this.y = y;
+    }
+
+    public void setX(int x) {
+        this.x = x;
+    }
+
+
+
+    Player(int height, int width, Color color){
+        this.height = height;
+        this.width = width;
+        this.color = color;
+
+        this.lastX = x; // Initialize lastX to the same value as x
+        this.lastY = y; // Initialize lastY to the same value as y
+    }
+    public int getDirection() {
+        int dx = x - lastX;
+        int dy = y - lastY;
+
+        if (dx == 0 && dy == -1) {
+            return Player.NORTH;
+        } else if (dx == 1 && dy == 0) {
+            return Player.EAST;
+        } else if (dx == 0 && dy == 1) {
+            return Player.SOUTH;
+        } else if (dx == -1 && dy == 0) {
+            return Player.WEST;
+        } else {
+            // This should never happen, but just in case
+            throw new IllegalStateException("Invalid player direction");
         }
-        if(randY<10){
-            y+=10;
-        }else if(y>490){
-            y-=10;
+    }
+
+
+    void die() {
+        isAlive = false;
+        ArrayList<Node> ownedTilesCopy = (ArrayList<Node>) ownedNodes.clone();
+        ArrayList<Node> contestedTilesCopy = (ArrayList<Node>) contestedNodes.clone();
+        for(int i = 0; i < ownedTilesCopy.size(); i++){
+            ownedTilesCopy.get(i).setOwner(null);
         }
-        if(randZ<=0.25){
-            dX=1;
-            dY=0;
-        }else if(randZ<=0.5&&randZ>0.25){
-            dX=-1;
-            dY=0;
-        } else if (randZ<=0.75&&randZ>0.5) {
-            dX=0;
-            dY=1;
-            
-        }else{
-            dX=0;
-            dY=-1;
+
+        for(int i = 0; i < contestedTilesCopy.size(); i++){
+            contestedTilesCopy.get(i).setContestedOwner(null);
         }
+
+        currentNode = null;
+        ownedNodes.clear();
+        contestedNodes.clear();
 
     }
-    void killed(){
-        dead=true;
-        ArrayList<Node>darkNodes2;
-        ArrayList<Node>brightNode2;
-        darkNodes2= (ArrayList<Node>) darkNodes.clone();
-        brightNode2= (ArrayList<Node>) brightNodes.clone();
-        for(int i=0;i<darkNodes2.size();i++)
-            darkNodes2.get(i).setOwner(null);
-        for(int j=0;j<brightNode2.size();j++)
-            brightNode2.get(j).setNotCompleteOwner(null);
-
-        brightNodes.clear();
-        darkNodes.clear();
-        thisNode=null;
-
-
+    void removeOwnedTile(Node t){
+        ownedNodes.remove(t);
     }
     abstract void move();
-    protected void removeDarkNode(Node node){
-        darkNodes.remove(node);
+
+    void contestToOwned(){
+        for (Node t : contestedNodes) {
+            setOwnedTiles(t);
+        }
+        contestedNodes.clear();
     }
-    protected void changeBrightToDark(){
-        for (Node node:brightNodes)
-            setDarkNodes(node);
-        brightNodes.clear();
 
-
-    }
-    protected void fight(Node node){
-        if(node.getNotCompleteOwner()!=null)
-            node.getNotCompleteOwner().killed();
-
+    void checkAttack(Node t){
+        if(t.getContestedOwner() != null) {
+            t.getContestedOwner().die();
+        }
     }
 
 
-    }
-
+}

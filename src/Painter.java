@@ -5,85 +5,98 @@ import java.util.List;
 class Painter {
 
     private int height,width;
-    private final int scale;
+    private final int measure=40;
     private boolean draw = true;
     private List<Player> players;
-    private Board board;
-    private Player humanPlayer;
+    private Game game;
+    private Player mainPlayer;
 
-    Painter(int scale, Board board, Player humanPlayer, List<Player> players){
-        this.scale = scale;
-        this.board = board;
+    Painter( Game game, Player mainPlayer, List<Player> players){
+        this.game = game;
         this.players = players;
-        this.humanPlayer = humanPlayer;
+        this.mainPlayer=mainPlayer;
     }
 
 
 
-    void render(Graphics g){
-        if(draw){
-            height = g.getClipBounds().height;
-            width = g.getClipBounds().width;
-            drawGameArea(g);
-            drawPlayers(g);
+    void rendering(Graphics g){
+        if(!draw) {
+            return;
         }
+
+        height = g.getClipBounds().height;
+        width = g.getClipBounds().width;
+
+        drawGameArea(g);
+        drawPlayers(g);
     }
+
     public void setDraw(boolean draw) {
 
         this.draw = draw;
     }
 
     private void drawPlayers(Graphics g){
-        int drawX;
-        int drawY;
-
-        g.setFont(new Font("Monospaced", Font.PLAIN, 12));
+        g.setFont(new Font("Arial", Font.BOLD, 16));
         FontMetrics fontMetrics = g.getFontMetrics();
 
         for (Player player : players) {
-            drawX = (player.getX() - humanPlayer.getX()) * scale + ((width - scale) / 2);
-            drawY = (player.getY() - humanPlayer.getY()) * scale + ((height - scale) / 2);
-            if (player != humanPlayer) {
-                drawX += ((player.getDx() - humanPlayer.getDx()) * scale
-                        * ((board.getTickCounter() + 1) / (double) board.getTickReset()));
-                drawY += ((player.getDy() - humanPlayer.getDy()) * scale
-                        * ((board.getTickCounter() + 1) / (double) board.getTickReset()));
+            if (player == mainPlayer) {
+                continue;
             }
-            g.setColor(Color.BLUE);
-            g.drawString(player.getNameOfPlayer(),
-                    drawX + (scale - fontMetrics.stringWidth(player.getNameOfPlayer()))/2, drawY+scale+16);
 
-            if (!(drawX + scale < 0 || drawX > width || drawY + scale < 0 || drawY > height)) {
-                g.setColor(player.getColor());
-                g.fillRect(drawX, drawY, scale, scale);
+            int drawX = (int) ((player.getX() - mainPlayer.getX()) * measure + ((width - measure) / 2)
+                                + ((player.getDx() - mainPlayer.getDx()) * measure
+                                * ((game.getSmooth() + 1) / (double) game.getTickReset())));
+            int drawY = (int) ((player.getY() - mainPlayer.getY()) * measure + ((height - measure) / 2)
+                                + ((player.getDy() - mainPlayer.getDy()) * measure
+                                * ((game.getSmooth() + 1) / (double) game.getTickReset())));
+
+            if (drawX + measure < 0 || drawX > width || drawY + measure < 0 || drawY > height) {
+                continue;
             }
+
+            g.setColor(player.getColor());
+            g.fillRect(drawX, drawY, measure, measure);
+
+            g.setColor(player.getColor());
+            String playerName = player.getNameOfPlayer();
+            int stringWidth = fontMetrics.stringWidth(playerName);
+            g.drawString(playerName, drawX + (measure - stringWidth) / 2, drawY + measure + 16);
         }
+
+        int mainDrawX = (width - measure) / 2;
+        int mainDrawY = (height - measure) / 2;
+        g.setColor(mainPlayer.getColor());
+        g.fillRect(mainDrawX, mainDrawY, measure, measure);
+
+        g.setColor(Color.BLACK);
+        String mainPlayerName = mainPlayer.getNameOfPlayer();
+        int stringWidth = fontMetrics.stringWidth(mainPlayerName);
+        g.drawString(mainPlayerName, mainDrawX + (measure - stringWidth) / 2, mainDrawY + measure + 16);
     }
 
     private void drawGameArea(Graphics g) {
-        int drawX;
-        int drawY;
+        for (int y = 0; y < game.getAreaHeight(); y++) {
+            for (int x = 0; x < game.getAreaWidth(); x++) {
+                int tileX = x - mainPlayer.getX();
+                int tileY = y - mainPlayer.getY();
+                int offsetX = (int) (-mainPlayer.getDx() * measure
+                        * ((game.getSmooth() + 1) / (double) game.getTickReset()));
+                int offsetY = (int) (-mainPlayer.getDy() * measure
+                        * ((game.getSmooth() + 1) / (double) game.getTickReset()));
+                int drawX = tileX * measure + ((width - measure) / 2) + offsetX;
+                int drawY = tileY * measure + ((height - measure) / 2) + offsetY;
 
-        for (int y = 0; y < board.getAreaHeight(); y++) {
-            for (int x = 0; x < board.getAreaWidth(); x++) {
-                // x and y position relative to humanPlayer at which tile should be drawn
-                drawX = (x - humanPlayer.getX()) * scale + ((width - scale) / 2)
-                        + (int) ((-humanPlayer.getDx()) * scale *
-                        ((board.getTickCounter() + 1) / (double) board.getTickReset()));
-                drawY = (y - humanPlayer.getY()) * scale + ((height - scale) / 2)
-                        + (int) ((-humanPlayer.getDy()) * scale *
-                        ((board.getTickCounter() + 1) / (double) board.getTickReset()));
-
-                // If visible, draw first white background and then draw color on top
-                if (!(drawX + scale < 0 || drawX > width || drawY + scale < 0 || drawY > height)) {
-                    g.setColor(Color.white);
-                    g.fillRect(drawX, drawY, scale, scale);
-
-                    g.setColor(board.getTile(x,y).getColor());
-                    g.fillRect(drawX, drawY, scale, scale);
+                if (drawX + measure < 0 || drawX > width || drawY + measure < 0 || drawY > height) {
+                    continue;
                 }
+
+                g.setColor(Color.WHITE);
+                g.fillRect(drawX, drawY, measure, measure);
+
+                g.setColor(game.getTile(x, y).getColor());
+                g.fillRect(drawX, drawY, measure, measure);
             }
         }
-    }
-
-}
+    }}

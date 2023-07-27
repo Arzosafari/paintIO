@@ -2,88 +2,63 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-
-/**
- * PaperIO is the main class used to start window and keep track of current state and switch between states.
- */
+//lll
 class PaintIo extends JFrame implements ActionListener{
 
 
 
-    private JPanel card;
-    private Board board;
-    private Menu menu;
+    private JPanel panel;
+    private Game gameScene;
+    private MenuScene menuScene;
 
-    /**
-     * Initializes a new occurrence of game
-     */
+
     private PaintIo(){
-        initializeUI();
-    }
-
-    /**
-     * Specifies size, title and layout etc for game
-     */
-    private void initializeUI(){
-        setSize(1000, 1000);
-        setResizable(true);
+        setSize(500,500);
+        setTitle("PAINT.IO");
         setVisible(true);
-        setTitle("pant.io");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
-        menu = new Menu(this);
-        card = new JPanel(new CardLayout());
-        card.add(menu, "menu");
+        setResizable(false);
+        addMenu();
 
-        add(card);
+
+    }
+    private void addMenu(){
+        menuScene=new MenuScene(this);
+        CardLayout cardLayout=new CardLayout();
+        panel=new JPanel(cardLayout);
+        panel.add(menuScene,"menuScene");
+        add(panel);
     }
 
-    /**
-     * Enum with all possible game states
-     */
-    private enum STATES{
-        GAME,
-        MENU
-    }
-
-    /**
-     * Sets game state to specified state
-     * @param s STATE game should be set to
-     */
 
 
-    /**
-     * Reacts to game actions such as game start and game paused
-     * @param e event to react to
-     */
+
+
     @Override
     public void actionPerformed(ActionEvent e) {
+        CardLayout cardLayout = (CardLayout) panel.getLayout();
+
         switch (e.getActionCommand()) {
-            case "play single":
-                board = new Board(this, menu.getP1Name(), menu.getAreaHeight(), menu.getAreaWidth(), menu.getGameSpeed(), menu.getBotNumber());
-                card.add(board, "board");
-                setState(STATES.GAME);
+            case "LEVEL 1":
+                gameScene = new Game(this, menuScene.getPlayerName(),   menuScene.getGameSpeed(), menuScene.getEnemyNumber());
+                panel.add(gameScene,"gameScene");
+                cardLayout.show(panel,"gameScene");
+                gameScene.setPaused(false);
                 break;
-            case "play Multi":
-                board = new Board(this, menu.getP1Name(), menu.getP2Name(), menu.getAreaHeight(), menu.getAreaWidth(), menu.getGameSpeed(), menu.getBotNumber());
-                card.add(board, "board");
-                setState(STATES.GAME);
+            case "LEVEL 2":
+                gameScene = new Game(3);
+                panel.add(gameScene,"gameScene");
+                cardLayout.show(panel,"gameScene");
+                gameScene.setPaused(false);
                 break;
-            case "End Game":
-                setState(STATES.MENU);
+            case "GAME OVER":
+                cardLayout.show(panel,"menuScene");
+                gameScene.setPaused(true);
                 break;
         }
     }
-    private void setState(STATES s){
-        CardLayout cardLayout = (CardLayout) card.getLayout();
-        if(s == STATES.GAME){
-            cardLayout.show(card, "board");
-            board.setPaused(false);
-        }else if(s == STATES.MENU){
-            cardLayout.show(card, "menu");
-            board.setPaused(true);
-        }
-    }
+
     public static void main(String[] args) {
         EventQueue.invokeLater(PaintIo::new);
     }
