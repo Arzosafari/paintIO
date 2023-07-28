@@ -63,6 +63,10 @@ class Node {
             return ((x + y) % 2 == 0) ? Color.PINK : Color.BLACK;
         }
     }
+    public Color setColor(Color color){
+        return color;
+
+    }
 
 
 }

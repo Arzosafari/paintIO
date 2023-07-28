@@ -10,7 +10,9 @@ public class Game extends JPanel {
     private int offsetX, offsetY;
     private boolean isDragging;
     private boolean isMoving;
+    private int bullet=4;
     private int destinationX, destinationY;
+    private boolean hard;
 
     private ActionListener actionListener;
     MouseEvent e;
@@ -33,6 +35,7 @@ public class Game extends JPanel {
     Game(ActionListener actionListener, String p1name,int gameSpeed, int enemyNumber,boolean hard){
         setSize(1000,1000);
         this.actionListener=actionListener;
+        this.hard=true;
         this.enemyNumber=enemyNumber;
         int[] speeds = {10, 8, 6,4,2};
         finalSpeed=speeds[gameSpeed-1];
@@ -66,6 +69,7 @@ public class Game extends JPanel {
         this.enemyNumber = enemyNumber;
         int[] speeds = {12, 10, 8, 6, 4};
         finalSpeed = speeds[gameSpeed - 1];
+        this.hard=false;
 
         players.add(mainPlayer=new MainPlayer(areaHeight, areaWidth, new Color(102,40,75), p1name));
 
@@ -134,43 +138,57 @@ public class Game extends JPanel {
 
 
     private void weaponA(MainPlayer currentPlayer, Node[][] nodes) {
-        int x = currentPlayer.lastX;
-        int y = currentPlayer.lastY;
+        int x = currentPlayer.getX();
+        int y = currentPlayer.getY();
         int dx = currentPlayer.getDx();
         int dy = currentPlayer.getDy();
+        if(bullet>0) {
 
-        // Determine the coordinates of the center node
-        int centerX = x;
-        int centerY = y;
-        if (dx > 0&&dy==0) {
-            centerX += 5;
-        } else if (dx < 0&&dy==0) {
-            centerX -= 5;
-        } else if (dy > 0&&dx==0) {
-            centerY += 5;
-        } else if (dy < 0&&dx==0) {
-            centerY -= 5;
-        }
+            if (currentPlayer.getDirection() == Player.SOUTH) {
+                for (int i = x - 1; i <= x + 1; i++) {
+                    for (int j = y + 5; j <= y + 7; j++) {
+                        currentPlayer.setOwnedTiles(nodes[j][i]);
+                        if(nodes[j][i].getContestedOwner() instanceof normalEnemy||nodes[j][i].getContestedOwner() instanceof SmartEnemy)
+                            nodes[j][i].getContestedOwner().die();
 
-        // Color the 9-square unit area in front of the player
-        for (int i = centerX - 1; i <= centerX + 1; i++) {
-            for (int j = centerY - 1; j <= centerY + 1; j++) {
+                    }
+                }
+            } else if (currentPlayer.getDirection() == Player.EAST) {
+                for (int i = x + 5; i <= x + 7; i++) {
+                    for (int j = y - 1; j <= y + 1; j++) {
+                        currentPlayer.setOwnedTiles(nodes[j][i]);
+                        if(nodes[j][i].getContestedOwner() instanceof normalEnemy||nodes[j][i].getContestedOwner() instanceof SmartEnemy)
+                            nodes[j][i].getContestedOwner().die();
+                    }
+                }
+            } else if (currentPlayer.getDirection() == Player.WEST) {
+                for (int i = x - 7; i <= x - 5; i++) {
+                    for (int j = y - 1; j <= y + 1; j++) {
+                        currentPlayer.setOwnedTiles(nodes[j][i]);
+                        if(nodes[j][i].getContestedOwner() instanceof normalEnemy||nodes[j][i].getContestedOwner() instanceof SmartEnemy)
+                            nodes[j][i].getContestedOwner().die();
+                    }
+                }
 
-
-                    currentPlayer.setOwnedTiles(nodes[i][j]);
+            } else if (currentPlayer.getDirection() == Player.NORTH) {
+                for (int i = x - 1; i <= x + 1; i++) {
+                    for (int j = y - 7; j <= y - 5; j++) {
+                        currentPlayer.setOwnedTiles(nodes[j][i]);
+                        if(nodes[j][i].getContestedOwner() instanceof normalEnemy||nodes[j][i].getContestedOwner() instanceof SmartEnemy)
+                            nodes[j][i].getContestedOwner().die();
+                    }
                 }
             }
+            bullet--;
+        }
+        else {
+            JPanel panel = new JPanel();
+            panel.setBackground(Color.PINK);
 
+            JOptionPane.showMessageDialog(this, panel, "you cant use weapon A anymore!!! ", JOptionPane.PLAIN_MESSAGE);
 
-        // Destroy any enemy on the center node
-        Node centerNode = nodes[centerX][centerY];
-        if (centerNode.getContestedOwner() instanceof normalEnemy) {
-            normalEnemy enemy = (normalEnemy) centerNode.getContestedOwner();
-            enemy.die();
-            centerNode.setContestedOwner(null);
         }
     }
-
 
     private void timer(){
          Timer timer = new Timer();
@@ -374,16 +392,17 @@ public class Game extends JPanel {
     }
 
 
-    /**
-     * Marks all tiles in the starting area of a player to owned by player
-     * @param player player to generate starting area for
-     */
     private void firstPlace(Player player){
         int x = player.getX();
         int y = player.getY();
         if(!notClose(player)){
+            if(hard){
+                Player player2 = new SmartEnemy(gameArea.length,gameArea[0].length, player.getColor(),mainPlayer);
+                firstPlace(player2);
+
+            }else{
             Player player2 = new normalEnemy(gameArea.length,gameArea[0].length, player.getColor());
-            firstPlace(player2);
+            firstPlace(player2);}
         }
         for(int i = x-1; i <= x+1; i++){
             for(int j = y-1; j <= y+1; j++){
@@ -394,11 +413,12 @@ public class Game extends JPanel {
 
 
 
+
     private boolean notClose(Player player){
         int x = player.getX();
         int y = player.getY();
-        for(int i = x-3; i <= x+3; i++) {
-            for (int j = y - 3; j <= y + 3; j++) {
+        for(int i = x-4; i <= x+4; i++) {
+            for (int j = y - 4; j <= y + 4; j++) {
                 if (getTile(i, j).getOwner() != null || getTile(i, j).getContestedOwner() != null ) {
                     return false;
                 }
@@ -406,10 +426,7 @@ public class Game extends JPanel {
         }
         return true;}
 
-    /**
-     * Overrides paintComponent and is called whenever everything should be drawn on the screen
-     * @param g Graphics element used to draw elements on screen
-     */
+
     @Override
     public void paintComponent(Graphics g) {
         super.paintComponent(g);
@@ -443,7 +460,7 @@ public class Game extends JPanel {
             Node node = getTile(x, y);
             player.checkAttack(node);
             player.setCurrentTile(node);
-            findCollision(player, node);
+
 
 
            if (node.getOwner() != player && player.getAlive()) {
@@ -451,7 +468,7 @@ public class Game extends JPanel {
 
             } else if (player.getContestedTiles().size() > 0) {
                 player.contestToOwned();
-                fillEnclosure(player);
+                dfs(player);
             }
 
             // If BotPlayer is killed, add it to deadBots list
@@ -459,7 +476,7 @@ public class Game extends JPanel {
                 looserEnemy.add(player);
             }
         }
-        renewBots();
+        renewEnemy();
 
         boolean allKilled = true;
 
@@ -486,10 +503,8 @@ public class Game extends JPanel {
          actionListener.actionPerformed(new ActionEvent(this, 0, "GAME OVER"));
     }
 
-    /**
-     * Method that respawns dead bots after a set interval
-     */
-    private void renewBots(){
+
+    private void renewEnemy(){
         for(int i = 0; i < looserEnemy.size(); i++){
             if(looserEnemy.get(i).getAlive()){
                 Player player = new normalEnemy(gameArea.length,gameArea[0].length,
@@ -501,47 +516,17 @@ public class Game extends JPanel {
         }
     }
 
-    /**
-     * Method that detects player-to-player head on collision
-     * @param player Player you want to check collision for
-     * @param node   Tile that Player currently is on
-     */
-    private void findCollision(Player player, Node node) {
-        // If corresponding tile is found in tilePlayerMap
-        if(tilePlayerHashMap.containsKey(node)) {
 
-            for(Map.Entry<Node, Player> entry : tilePlayerHashMap.entrySet()) {
-                if (entry.getKey() == node) {
-                    if (entry.getValue().getContestedTiles().size() > player.getContestedTiles().size()) {
-                        entry.getValue().die();
-                    } else if (entry.getValue().getContestedTiles().size() < player.getContestedTiles().size()) {
-                        player.die();
-                    } else if (entry.getValue().getContestedTiles().size() == player.getContestedTiles().size()) {
-                        if (entry.getValue().getOwnedTiles().size() > player.getOwnedTiles().size()) {
-                            entry.getValue().die();
-                        } else {
-                            player.die();
-                        }
-                    }
-                }
-            }
-        }else { // If no corresponding tile is found, add tile and player to tilePlayerMap
-            tilePlayerHashMap.put(node, player);
-        }
-        // Remove dead players(lambda)
-        players.removeIf(p -> !p.getAlive());
-    }
 
-    /**
-     * Controls tick counter of game which is needed to make game smooth.
-     */
+
+
     private void smooth(){
         smooth++;
         smooth %= finalSpeed;
     }
 
 
-    private void fillEnclosure(Player player) {
+    private void dfs(Player player) {
 
         int maxX = 0;
         int minX = gameArea[0].length;
@@ -628,34 +613,19 @@ public class Game extends JPanel {
         return areaWidth;
     }
 
-    /**
-     * Get current tick counter
-     * @return current tick counter
-     */
+
     int getSmooth() {
         return smooth;
     }
 
-    /**
-     * Get how often tick is reset, impacting speed of game
-     * @return how often tick is reset
-     */
     int getTickReset() {
         return finalSpeed;
     }
 
-    /**
-     * Get tile at position (x,y)
-     * @param x x position of tile
-     * @param y y position of tile
-     * @return tile at position (x,y)
-     */
+
     Node getTile(int x, int y){
         return gameArea[y][x];
     }
 
-    /**
-     * ScheduleTask is responsible for receiving and responding to timer calls
-     */
 
 }

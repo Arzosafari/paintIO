@@ -32,9 +32,6 @@ class PaintIo extends JFrame implements ActionListener{
     }
 
 
-
-
-
     @Override
     public void actionPerformed(ActionEvent e) {
         CardLayout cardLayout = (CardLayout) panel.getLayout();

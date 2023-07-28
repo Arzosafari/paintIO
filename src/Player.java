@@ -87,8 +87,7 @@ public abstract class Player implements Comparable<Player> {//
         this.lastY = y; // Initialize lastY to the same value as y
     }
     public int getDirection() {
-        int dx = x - lastX;
-        int dy = y - lastY;
+
 
         if (dx == 0 && dy == -1) {
             return Player.NORTH;
