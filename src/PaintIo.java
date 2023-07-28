@@ -18,7 +18,7 @@ class PaintIo extends JFrame implements ActionListener{
         setVisible(true);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
-        setResizable(false);
+        setResizable(true);
         addMenu();
 
 

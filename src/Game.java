@@ -31,9 +31,10 @@ public class Game extends JPanel {
     private ArrayList<Painter> painters = new ArrayList<>();
     private HashMap<Player, Painter> playerPainterHashMap = new HashMap<>();
     Game(ActionListener actionListener, String p1name,int gameSpeed, int enemyNumber,boolean hard){
+        setSize(1000,1000);
         this.actionListener=actionListener;
         this.enemyNumber=enemyNumber;
-        int[] speeds = {16, 14, 12, 10, 8};
+        int[] speeds = {10, 8, 6,4,2};
         finalSpeed=speeds[gameSpeed-1];
         players.add(mainPlayer=new MainPlayer(areaHeight, areaWidth, new Color(102,60,90), p1name));
         this.gameArea =  new Node[areaWidth][areaHeight];
@@ -60,6 +61,7 @@ public class Game extends JPanel {
 
 
     Game(ActionListener actionListener, String p1name,int gameSpeed, int enemyNumber){
+        setSize(1000,1000);
         this.actionListener = actionListener;
         this.enemyNumber = enemyNumber;
         int[] speeds = {12, 10, 8, 6, 4};
@@ -118,12 +120,12 @@ public class Game extends JPanel {
             }
         });
 
-
+        timer();
         movePlayerByMouse(mainPlayer);
         registerArrowKeyInputs();
         addNormalEnemy();
         setBackground(Color.BLACK);
-        timer();
+
 
         painters.add(new Painter( this, mainPlayer, players));
         playerPainterHashMap.put(mainPlayer, painters.get(0));
@@ -131,34 +133,42 @@ public class Game extends JPanel {
 
 
 
-    private void weaponA(MainPlayer currentPlayer){
-        int x=currentPlayer.getX();
-        int y=currentPlayer.getY();
-        int dx=currentPlayer.getDx();
-        int dy=currentPlayer.getDy();
-        Node[][] nodes =new Node[x+1][y+7];
-        int newX;
-        int newY;
-        if(dx==0){
-            for(int i=x-1;i<=x+1;i++){
-                for(int j=y+5;j<=y+7;j++){
-                    Node node = nodes[i][j];
-                    currentPlayer.setOwnedTiles(node);
+    private void weaponA(MainPlayer currentPlayer, Node[][] nodes) {
+        int x = currentPlayer.lastX;
+        int y = currentPlayer.lastY;
+        int dx = currentPlayer.getDx();
+        int dy = currentPlayer.getDy();
 
-                }
-            }
-
-        } else if (dy==0) {
-            for(int i=x+5;i<=x+7;i++){
-                for (int j=y-1;j<=y+1;j++){
-                    Node node = nodes[i][j];
-                    currentPlayer.setOwnedTiles(node);
-                }
-            }
-
+        // Determine the coordinates of the center node
+        int centerX = x;
+        int centerY = y;
+        if (dx > 0&&dy==0) {
+            centerX += 5;
+        } else if (dx < 0&&dy==0) {
+            centerX -= 5;
+        } else if (dy > 0&&dx==0) {
+            centerY += 5;
+        } else if (dy < 0&&dx==0) {
+            centerY -= 5;
         }
 
+        // Color the 9-square unit area in front of the player
+        for (int i = centerX - 1; i <= centerX + 1; i++) {
+            for (int j = centerY - 1; j <= centerY + 1; j++) {
 
+
+                    currentPlayer.setOwnedTiles(nodes[i][j]);
+                }
+            }
+
+
+        // Destroy any enemy on the center node
+        Node centerNode = nodes[centerX][centerY];
+        if (centerNode.getContestedOwner() instanceof normalEnemy) {
+            normalEnemy enemy = (normalEnemy) centerNode.getContestedOwner();
+            enemy.die();
+            centerNode.setContestedOwner(null);
+        }
     }
 
 
@@ -297,6 +307,23 @@ public class Game extends JPanel {
             @Override
             public void actionPerformed(ActionEvent e) {
                 mainPlayer.setNextKey(KeyEvent.VK_RIGHT);
+            }
+
+            @Override
+            public boolean isEnabled() {
+                return true;
+            }
+
+            @Override
+            public void putValue(String key, Object value) {
+                // Do nothing
+            }
+        });
+        getInputMap(WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), "weaponA");
+        getActionMap().put("weaponA", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                weaponA(mainPlayer,gameArea);
             }
 
             @Override
@@ -449,12 +476,14 @@ public class Game extends JPanel {
         players.removeIf(p -> !p.getAlive());
     }
 
-    /**
-     * Method to end game and tell this to PaperIO class
-     */
-    private void endGame(){
-        JOptionPane.showMessageDialog(this, "YOU LOST!, GAME OVER...", "GAME OVER", JOptionPane.PLAIN_MESSAGE);
-        actionListener.actionPerformed(new ActionEvent(this, 0, "GAME OVER"));
+
+    private void endGame()
+    {
+        JPanel panel = new JPanel();
+        panel.setBackground(Color.PINK);
+
+        JOptionPane.showMessageDialog(this, panel, "YOU LOST!, GAME OVER...", JOptionPane.PLAIN_MESSAGE);
+         actionListener.actionPerformed(new ActionEvent(this, 0, "GAME OVER"));
     }
 
     /**
