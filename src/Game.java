@@ -1,12 +1,22 @@
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.util.Timer;
+import java.io.File;
 import java.util.*;
+import java.util.TimerTask;
+import java.util.Timer;
+
+
 
 
 public class Game extends JPanel {
     private Node[][] gameArea;
+    private Clip clip;
+    private boolean canCallMethod = true;
+    private Timer timer;
+
     private int offsetX, offsetY;
     private boolean isDragging;
     private boolean isMoving;
@@ -28,6 +38,7 @@ public class Game extends JPanel {
     private HashMap<Node, Player> tilePlayerHashMap = new HashMap<>();
 
     private ArrayList<Player> looserEnemy = new ArrayList<>();
+    private ArrayList<normalEnemy> normalEnemies=new ArrayList<>();
     private boolean paused = true;
 
     private ArrayList<Painter> painters = new ArrayList<>();
@@ -65,6 +76,27 @@ public class Game extends JPanel {
 
     Game(ActionListener actionListener, String p1name,int gameSpeed, int enemyNumber){
         setSize(1000,1000);
+        File file = new File("C:\\Users\\arezo\\IdeaProjects\\newOne\\src\\bensound-smile.mp3");
+
+        try {
+            // Create a Clip object to play the music
+            clip = AudioSystem.getClip();
+            clip.open(AudioSystem.getAudioInputStream(file));
+
+            // Set the audio to loop indefinitely
+            clip.loop(Clip.LOOP_CONTINUOUSLY);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        timer = new Timer();
+        timer.schedule(new MyTask(), 0, 3000);
+
+
+
+
+
+
+
         this.actionListener = actionListener;
         this.enemyNumber = enemyNumber;
         int[] speeds = {12, 10, 8, 6, 4};
@@ -123,6 +155,8 @@ public class Game extends JPanel {
                 }
             }
         });
+
+
 
         timer();
         movePlayerByMouse(mainPlayer);
@@ -189,6 +223,63 @@ public class Game extends JPanel {
 
         }
     }
+    private void weaponB(MainPlayer currentPlayer,Node[][] nodes){
+        int x = currentPlayer.getX();
+        int y = currentPlayer.getY();
+        if(canCallMethod){
+        if(currentPlayer.getDirection()==Player.NORTH){
+            for(int i=y+1;i<=areaHeight;i++){
+                if(!hard){
+
+                   for(normalEnemy player:normalEnemies){
+                       if(player.getX()==x&&player.getY()==i){
+                           System.out.println("die");
+                           player.die();}
+
+                   }
+                }
+            }
+        }if(currentPlayer.getDirection()==Player.SOUTH){
+            for(int i=y+1;i>0;i--){
+                if(!hard){
+                    for(normalEnemy player:normalEnemies){
+                        if(player.getX()==x&&player.getY()==i){
+                            System.out.println("die");
+                            player.die();}
+                    }
+                }
+
+            }
+        }if(currentPlayer.getDirection()==Player.EAST){
+            for(int i=x+1;i<areaWidth;i++){
+                if(!hard){
+                    for(normalEnemy player:normalEnemies)
+                        if(player.getX()==i&&player.getY()==y){
+                            System.out.println("die");
+                            player.die();}
+                }
+            }
+        }
+        if(currentPlayer.getDirection()==Player.WEST){
+            for(int i=x+1;i<areaWidth;i++){
+                if(!hard){
+                    for (normalEnemy player:normalEnemies){
+                        if (player.getX()==i&&player.getY()==y){
+                            System.out.println("die");
+                            player.die();}
+                    }
+                }
+            }
+        }}
+        else {
+            JPanel panel = new JPanel();
+            panel.setBackground(Color.PINK);
+
+            JOptionPane.showMessageDialog(this, panel, "you cant use weapon B wait please!!! ", JOptionPane.PLAIN_MESSAGE);
+
+        }
+
+    }
 
     private void timer(){
          Timer timer = new Timer();
@@ -216,6 +307,8 @@ public class Game extends JPanel {
 
                 players.add(new normalEnemy(gameArea.length,gameArea[0].length,
                         new Color(randR,randG,randB)));
+                normalEnemies.add(new normalEnemy(gameArea.length,gameArea[0].length,
+                        new Color(randR,randG,randB)));
 
         }
 
@@ -229,6 +322,9 @@ public class Game extends JPanel {
 
                 players.add(new normalEnemy(gameArea.length,gameArea[0].length,
                         new Color(randR,randG,randB)));
+                normalEnemies.add(new normalEnemy(gameArea.length,gameArea[0].length,
+                        new Color(randR,randG,randB)));
+
 
             }else {
                 firstPlace(players.get(i));
@@ -244,6 +340,7 @@ public class Game extends JPanel {
 
             players.add(new SmartEnemy(gameArea.length,gameArea[0].length,
                     new Color(randR,randG,randB),mainPlayer));
+
 
         }
         for( int i = 0; i < players.size(); i++){
@@ -342,6 +439,23 @@ public class Game extends JPanel {
             @Override
             public void actionPerformed(ActionEvent e) {
                 weaponA(mainPlayer,gameArea);
+            }
+
+            @Override
+            public boolean isEnabled() {
+                return true;
+            }
+
+            @Override
+            public void putValue(String key, Object value) {
+                // Do nothing
+            }
+        });
+        getInputMap(WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_SPACE, 0), "weaponB");
+        getActionMap().put("weaponB", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                weaponB(mainPlayer,gameArea);
             }
 
             @Override
@@ -460,6 +574,7 @@ public class Game extends JPanel {
             Node node = getTile(x, y);
             player.checkAttack(node);
             player.setCurrentTile(node);
+            findCollision(player,node);
 
 
 
@@ -507,10 +622,12 @@ public class Game extends JPanel {
     private void renewEnemy(){
         for(int i = 0; i < looserEnemy.size(); i++){
             if(looserEnemy.get(i).getAlive()){
-                Player player = new normalEnemy(gameArea.length,gameArea[0].length,
+                normalEnemy player = new normalEnemy(gameArea.length,gameArea[0].length,
                         new Color((int)(Math.random() * 0x1000000)));
+
                 firstPlace(player);
                 players.add(player);
+                normalEnemies.add(player);
                 looserEnemy.remove(looserEnemy.get(i));
             }
         }
@@ -523,6 +640,30 @@ public class Game extends JPanel {
     private void smooth(){
         smooth++;
         smooth %= finalSpeed;
+    }
+    private void findCollision(Player player,Node tile){
+        if(tilePlayerHashMap.containsKey(tile)){
+            for(Map.Entry<Node, Player> entry : tilePlayerHashMap.entrySet()) {
+                if (entry.getKey() == tile) {
+                    if (entry.getValue().getContestedTiles().size() > player.getContestedTiles().size()) {
+                        entry.getValue().die();
+                    } else if (entry.getValue().getContestedTiles().size() < player.getContestedTiles().size()) {
+                        player.die();
+                    } else if (entry.getValue().getContestedTiles().size() == player.getContestedTiles().size()) {
+                        if (entry.getValue().getOwnedTiles().size() > player.getOwnedTiles().size()) {
+                            entry.getValue().die();
+                        } else {
+                            player.die();
+                        }
+                    }
+                }
+            }
+
+        }else{
+            tilePlayerHashMap.put(tile, player);
+        }
+        players.removeIf(p -> !p.getAlive());
+
     }
 
 
@@ -625,6 +766,11 @@ public class Game extends JPanel {
 
     Node getTile(int x, int y){
         return gameArea[y][x];
+    }
+    private class MyTask extends TimerTask {
+        public void run() {
+            canCallMethod = true;
+        }
     }
 
 
