@@ -1,3 +1,5 @@
+
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -10,6 +12,8 @@ class PaintIo extends JFrame implements ActionListener{
     private JPanel panel;
     private Game gameScene;
     private MenuScene menuScene;
+    ActionListener actionListener;
+
 
 
     private PaintIo(){
@@ -38,10 +42,19 @@ class PaintIo extends JFrame implements ActionListener{
 
         switch (e.getActionCommand()) {
             case "LEVEL 1":
+                if(menuScene.getPlayerName()==null){
+
+                    JPanel panel = new JPanel();
+                    panel.setBackground(Color.PINK);
+
+                    JOptionPane.showMessageDialog(this, panel, "please write you name!!!", JOptionPane.PLAIN_MESSAGE);
+                    actionListener.actionPerformed(new ActionEvent(this, 0, "GAME OVER"));
+                }
+                else {
                 gameScene = new Game(this, menuScene.getPlayerName(),   menuScene.getGameSpeed(), menuScene.getEnemyNumber());
                 panel.add(gameScene,"gameScene");
                 cardLayout.show(panel,"gameScene");
-                gameScene.setPaused(false);
+                gameScene.setPaused(false);}
                 break;
             case "LEVEL 2":
                 gameScene = new Game(this,menuScene.getPlayerName(),   menuScene.getGameSpeed(), menuScene.getEnemyNumber(),true);

@@ -1,6 +1,9 @@
+import javax.sound.sampled.AudioSystem;
+import javax.sound.sampled.Clip;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionListener;
+import java.io.File;
 import java.util.Random;
 //llll
 public class MenuScene extends JPanel {
@@ -8,6 +11,7 @@ public class MenuScene extends JPanel {
     private JSpinner Speed;
     private JSpinner enemyNum;
     private ActionListener actionListener;
+    private Clip clip;
 
     public String getPlayerName(){
         return playerName.getText();
@@ -28,6 +32,18 @@ public class MenuScene extends JPanel {
 
     MenuScene(ActionListener actionListener){
         this.actionListener=actionListener;
+        File file = new File("src/bensound-smile_2.wav");
+
+        try {
+            // Create a Clip object to play the music
+            clip = AudioSystem.getClip();
+            clip.open(AudioSystem.getAudioInputStream(file));
+
+            // Set the audio to loop indefinitely
+            clip.loop(Clip.LOOP_CONTINUOUSLY);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         GridLayout gridLayout=new GridLayout(9,1);
         setLayout(gridLayout);
         setBackground(new Color(100,20,70));
@@ -101,7 +117,7 @@ public class MenuScene extends JPanel {
 
     private void addTextField() {
         JLabel playerNameLabel=new JLabel(" ENTER YOUR NAME: ");
-        playerName=new JTextField();
+        playerName=new JTextField("YOU ^^");
         playerNameLabel.setFont(new Font("Arial",Font.BOLD,16));
         playerNameLabel.setHorizontalAlignment(JLabel.CENTER);
         playerNameLabel.setVerticalAlignment(JLabel.CENTER);

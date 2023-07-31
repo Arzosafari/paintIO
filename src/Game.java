@@ -13,7 +13,7 @@ import java.util.Timer;
 
 public class Game extends JPanel {
     private Node[][] gameArea;
-    private Clip clip;
+
     private boolean canCallMethod = true;
     private Timer timer;
 
@@ -76,27 +76,9 @@ public class Game extends JPanel {
 
     Game(ActionListener actionListener, String p1name,int gameSpeed, int enemyNumber){
         setSize(1000,1000);
-        File file = new File("C:\\Users\\arezo\\IdeaProjects\\newOne\\src\\bensound-smile.mp3");
 
-        try {
-            // Create a Clip object to play the music
-            clip = AudioSystem.getClip();
-            clip.open(AudioSystem.getAudioInputStream(file));
-
-            // Set the audio to loop indefinitely
-            clip.loop(Clip.LOOP_CONTINUOUSLY);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
         timer = new Timer();
         timer.schedule(new MyTask(), 0, 3000);
-
-
-
-
-
-
-
         this.actionListener = actionListener;
         this.enemyNumber = enemyNumber;
         int[] speeds = {12, 10, 8, 6, 4};
@@ -230,47 +212,73 @@ public class Game extends JPanel {
         if(currentPlayer.getDirection()==Player.NORTH){
             for(int i=y+1;i<=areaHeight;i++){
                 if(!hard){
-
                    for(normalEnemy player:normalEnemies){
                        if(player.getX()==x&&player.getY()==i){
-                           System.out.println("die");
-                           player.die();}
+                           player.die();
+                           JPanel panel = new JPanel();
+                           panel.setBackground(Color.PINK);
+
+                           JOptionPane.showMessageDialog(this, panel, "you killed one enemy by weapon B", JOptionPane.PLAIN_MESSAGE);
+
+                       }
 
                    }
                 }
             }
+            canCallMethod=false;
         }if(currentPlayer.getDirection()==Player.SOUTH){
             for(int i=y+1;i>0;i--){
                 if(!hard){
                     for(normalEnemy player:normalEnemies){
                         if(player.getX()==x&&player.getY()==i){
-                            System.out.println("die");
-                            player.die();}
+                            player.die();
+                            JPanel panel = new JPanel();
+                            panel.setBackground(Color.PINK);
+
+                            JOptionPane.showMessageDialog(this, panel, "you killed one enemy by weapon B", JOptionPane.PLAIN_MESSAGE);
+
+                        }
                     }
                 }
 
             }
+            canCallMethod=false;
         }if(currentPlayer.getDirection()==Player.EAST){
             for(int i=x+1;i<areaWidth;i++){
                 if(!hard){
                     for(normalEnemy player:normalEnemies)
                         if(player.getX()==i&&player.getY()==y){
-                            System.out.println("die");
-                            player.die();}
+                            player.die();
+                            JPanel panel = new JPanel();
+                            panel.setBackground(Color.PINK);
+
+                            JOptionPane.showMessageDialog(this, panel, "you killed one enemy by weapon B", JOptionPane.PLAIN_MESSAGE);
+
+                        }
                 }
             }
+            canCallMethod=false;
         }
         if(currentPlayer.getDirection()==Player.WEST){
             for(int i=x+1;i<areaWidth;i++){
                 if(!hard){
                     for (normalEnemy player:normalEnemies){
                         if (player.getX()==i&&player.getY()==y){
-                            System.out.println("die");
-                            player.die();}
+
+                            player.die();
+                            JPanel panel = new JPanel();
+                            panel.setBackground(Color.PINK);
+
+                            JOptionPane.showMessageDialog(this, panel, "you killed one enemy by weapon B", JOptionPane.PLAIN_MESSAGE);
+
+                        }
                     }
                 }
+
             }
-        }}
+        }
+        canCallMethod=false;
+        }
         else {
             JPanel panel = new JPanel();
             panel.setBackground(Color.PINK);
@@ -553,10 +561,76 @@ public class Game extends JPanel {
         }
 
         Toolkit.getDefaultToolkit().sync();
+        drawEnemyNum(g);
+        drawScore(g,gameArea);
+    }
+    private void drawScore(Graphics g, Node[][] nodes) {
+        g.setFont(new Font("Arial", Font.PLAIN, 16));
+        FontMetrics fontMetrics = g.getFontMetrics();
+        int fontHeight = fontMetrics.getHeight();
+        int barWidth;
+        int barHeight = fontHeight + 4;
+
+        Color color;
+
+        int nodesOwned = 0;
+        int nodesContested = 0;
+        for (int row = 0; row < nodes.length; row++) {
+            for (int col = 0; col < nodes[row].length; col++) {
+                Node node = nodes[row][col];
+                if (node.getOwner() == mainPlayer) {
+                    nodesOwned++;}
+                else if (node.getContestedOwner() ==mainPlayer) {
+                        nodesContested++;
+                    }
+                    }
+                }
+
+
+
+        String string = String.format("Nodes Owned:%d|Nodes Contested:%d", nodesOwned, nodesContested);
+        color = Color.MAGENTA;
+
+        barWidth = getWidth() / 4;
+        g.setColor(color);
+        g.fillRect(getWidth() - barWidth, 0, barWidth, barHeight);
+        if (0.299 * color.getRed() + 0.587 * color.getGreen() + 0.114 * color.getBlue() < 127) {
+            g.setColor(Color.WHITE);
+        } else {
+            g.setColor(Color.BLACK);
+        }
+        g.drawString(string, 2 + getWidth() - barWidth, fontHeight + 4);
     }
 
+    private void drawEnemyNum(Graphics g) {
+        g.setFont(new Font("Arial", Font.PLAIN, 16));
+        FontMetrics fontMetrics = g.getFontMetrics();
+        int fontHeight = fontMetrics.getHeight();
+        int barWidth;
+        int barHeight = fontHeight + 4;
 
+        Color color;
 
+        int enemiesRemaining = 0;
+        for (Player player : players) {
+            if (player instanceof normalEnemy) {
+                enemiesRemaining++;
+            }
+        }
+
+        String string = String.format("Enemies Remaining: %d", enemiesRemaining);
+
+        barWidth = getWidth() / 4;
+        color = new Color(102, 40, 50);
+        g.setColor(color);
+        g.fillRect(getWidth() - barWidth, barHeight + 4, barWidth, barHeight);
+        if (0.299 * color.getRed() + 0.587 * color.getGreen() + 0.114 * color.getBlue() < 127) {
+            g.setColor(Color.WHITE);
+        } else {
+            g.setColor(Color.BLACK);
+        }
+        g.drawString(string, getWidth() - barWidth + 2, fontHeight + barHeight + 6);
+    }
     private void logic(){
         Player player;
         tilePlayerHashMap.clear();
