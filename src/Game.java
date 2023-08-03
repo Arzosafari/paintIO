@@ -28,8 +28,8 @@ public class Game extends JPanel {
     private ActionListener actionListener;
     MouseEvent e;
     private Point lastDragPoint;
-    private final int areaHeight=500;
-    private final int areaWidth=500;
+    private int areaHeight=500;
+    private int areaWidth=500;
 
     private int smooth = 0;
     private final int finalSpeed;
@@ -69,7 +69,7 @@ public class Game extends JPanel {
 
         registerArrowKeyInputs();
         addSmartEnemy();
-        setBackground(Color.BLACK);
+        setBackground(Color.PINK);
         timer();
         painters.add(new Painter( this, mainPlayer, players));
         playerPainterHashMap.put(mainPlayer, painters.get(0));
@@ -97,7 +97,7 @@ public class Game extends JPanel {
 
 
 
-        this.gameArea =  new Node[areaWidth][areaHeight];
+        this.gameArea =  new Node[500][500];
         for(int i = 0; i < gameArea.length; i++) {
             for (int j = 0; j < gameArea[i].length; j++) {
                 gameArea[i][j] = new Node(j, i);
@@ -151,7 +151,7 @@ public class Game extends JPanel {
         movePlayerByMouse(mainPlayer);
         registerArrowKeyInputs();
         addNormalEnemy();
-        setBackground(Color.BLACK);
+        setBackground(Color.PINK);
 
 
         painters.add(new Painter( this, mainPlayer, players));
@@ -598,7 +598,7 @@ public class Game extends JPanel {
 
 
 
-        String string = String.format("Nodes Owned:%d|Nodes Contested:%d", nodesOwned, nodesContested);
+        String string = String.format("Nodes Owned:  %d", nodesOwned);
         color = Color.MAGENTA;
 
         barWidth = getWidth() / 4;
@@ -678,30 +678,49 @@ public class Game extends JPanel {
     private void logic(){
         Player player;
         tilePlayerHashMap.clear();
+        if(mainPlayer.getX()>=getAreaWidth()||mainPlayer.getY()>=getAreaHeight()){
+            for(int i=getAreaWidth();i<=mainPlayer.getX();i++){
+                for(int j=getAreaHeight();j<=mainPlayer.getY();j++){
+                    gameArea[i][j]=new Node(i,j);
+
+                }
+            }
+            areaHeight=Math.max(mainPlayer.getX(),mainPlayer.getY())+1;
+            areaWidth=Math.max(mainPlayer.getX(),mainPlayer.getY())+1;
+
+        }
         for (int i = 0; i < players.size(); i++) {
             player = players.get(i);
             player.move();
             int x = player.getX();
             int y = player.getY();
             // unlimited part
-            if (x < 0) x = areaWidth -1 ;
-            if (x >= areaWidth)x= areaWidth-1;
-            if (y < 0) y = areaHeight -1 ;
-            if (y >= areaHeight) y = areaHeight-1;
-            player.setAlive(true);
-            Node node = getTile(x, y);
-            player.checkAttack(node);
-            player.setCurrentTile(node);
-            findCollision(player,node);
+            if(player.getX() < 0 || player.getX() >= areaWidth || player.getY() < 0 || player.getY() >= areaHeight){
+                for(int m=getAreaWidth();m<=mainPlayer.getX();m++){
+                    for(int j=getAreaHeight();j<=mainPlayer.getY();j++){
+                        gameArea[m][j]=new Node(m,j);
 
 
+                    }
+                }
+                player.die();
 
-           if (node.getOwner() != player && player.getAlive()) {
-               player.setContestedTiles(node);
+            }
 
-            } else if (player.getContestedTiles().size() > 0) {
-                player.contestToOwned();
-                dfs(player);
+            else {
+                Node node = getTile(x, y);
+                player.checkAttack(node);
+                player.setCurrentTile(node);
+                findCollision(player, node);
+
+
+                if (node.getOwner() != player && player.getAlive()) {
+                    player.setContestedTiles(node);
+
+                } else if (player.getContestedTiles().size() > 0) {
+                    player.contestToOwned();
+                    dfs(player);
+                }
             }
 
             // If BotPlayer is killed, add it to deadBots list

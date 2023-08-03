@@ -89,7 +89,8 @@ class Painter {
                 int drawY = tileY * measure + ((height - measure) / 2) + offsetY;
 
                 if (drawX + measure < 0 || drawX > width || drawY + measure < 0 || drawY > height) {
-                    continue;
+                   continue;
+
                 }
 
                 g.setColor(Color.WHITE);

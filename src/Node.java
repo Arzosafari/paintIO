@@ -60,7 +60,8 @@ class Node {
             float blendedBrightness = (completeHSB[2] + contestedHSB[2]) / 2.0f;
             return Color.getHSBColor(blendedHue, blendedSaturation, blendedBrightness);
         } else {
-            return ((x + y) % 2 == 0) ? Color.PINK : Color.BLACK;
+            return Color.pink;//((x + y) % 2 == 0) ? Color.PINK : Color.BLACK;
+
         }
     }
     public Color setColor(Color color){
