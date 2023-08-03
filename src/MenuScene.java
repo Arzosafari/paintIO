@@ -2,16 +2,18 @@ import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.Clip;
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
 import java.util.Random;
-//llll
+
 public class MenuScene extends JPanel {
     private JTextField playerName;
     private JSpinner Speed;
     private JSpinner enemyNum;
     private ActionListener actionListener;
     private Clip clip;
+    MusicPlayer musicPlayer;
 
     public String getPlayerName(){
         return playerName.getText();
@@ -32,26 +34,19 @@ public class MenuScene extends JPanel {
 
     MenuScene(ActionListener actionListener){
         this.actionListener=actionListener;
-        File file = new File("src/bensound-smile_2.wav");
+        musicPlayer=new MusicPlayer();
+        musicPlayer.play();
 
-        try {
-            // Create a Clip object to play the music
-            clip = AudioSystem.getClip();
-            clip.open(AudioSystem.getAudioInputStream(file));
-
-            // Set the audio to loop indefinitely
-            clip.loop(Clip.LOOP_CONTINUOUSLY);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        GridLayout gridLayout=new GridLayout(9,1);
+        GridLayout gridLayout=new GridLayout(14,1);
         setLayout(gridLayout);
         setBackground(new Color(100,20,70));
         addWelcome();
         addButton();
         addTextField();
         addSpinner();
-    }
+        addMusicButton();
+        }
+
     private void addWelcome(){
         JLabel welcome=new JLabel("WELCOME TO PAINT.IO");
         welcome.setFont(new Font("Arial",Font.ITALIC,20));
@@ -66,12 +61,15 @@ public class MenuScene extends JPanel {
     private void addButton() {
         Color color=new Color(102,20,60);
         Color color1=new Color(102,40,75);
+        Color color2=new Color(102,50,100);
         JButton level1=new JButton("LEVEL 1");
         JButton level2=new JButton("LEVEL 2");
-        JButton[] button={level1,level2};
+        JButton setting=new JButton("setting");
+        JButton[] button={level1,level2,setting};
         button[0].setBackground(color);
         button[1].setBackground(color1);
-        for(int i=0;i<=1;i++){
+        button[2].setBackground(color2);
+        for(int i=0;i<=2;i++){
             button[i].setFocusPainted(false);
             button[i].setSize(80,30);
             button[i].setForeground(Color.WHITE);
@@ -81,9 +79,6 @@ public class MenuScene extends JPanel {
 
         }
     }
-
-
-
 
 
     private void addSpinner(){
@@ -128,6 +123,33 @@ public class MenuScene extends JPanel {
         playerName.setFont(new Font("Arial",Font.BOLD,28));
         playerName.setHorizontalAlignment(JTextField.CENTER);
         add(playerName);
+
+    }
+    private void addMusicButton(){
+        JButton increase=new JButton("volume up");
+        JButton decrease=new JButton("volume down");
+        JButton stopMusic=new JButton("stop music");
+        JButton startMusic=new JButton("start music");
+        Color color=new Color(98,20,60);
+        Color color1=new Color(88,40,75);
+        Color color2=new Color(70,60,75);
+        Color color3=new Color(75,60,90);
+        JButton[] button={increase,decrease,stopMusic,startMusic};
+        Color[] colors={color,color1,color2,color3};
+        for(int i=0;i<=3;i++){
+            button[i].setBackground(colors[i]);
+            button[i].setFocusPainted(false);
+            button[i].setSize(80,30);
+            button[i].setForeground(Color.WHITE);
+            button[i].addActionListener(actionListener);
+            button[i].setFont(new Font("Arial",Font.BOLD,28));
+            add(button[i]);
+
+        }
+        increase.addActionListener(e -> musicPlayer.increaseVolume());
+        decrease.addActionListener(e -> musicPlayer.decreaseVolume());
+        stopMusic.addActionListener(e -> musicPlayer.stop());
+        startMusic.addActionListener(e->musicPlayer.play());
 
     }
 

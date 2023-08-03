@@ -3,7 +3,7 @@ import javax.sound.sampled.Clip;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
-import java.io.File;
+import java.io.*;
 import java.util.*;
 import java.util.TimerTask;
 import java.util.Timer;
@@ -13,6 +13,7 @@ import java.util.Timer;
 
 public class Game extends JPanel {
     private Node[][] gameArea;
+    static Color color=new Color(102,60,90);
 
     private boolean canCallMethod = true;
     private Timer timer;
@@ -43,6 +44,12 @@ public class Game extends JPanel {
 
     private ArrayList<Painter> painters = new ArrayList<>();
     private HashMap<Player, Painter> playerPainterHashMap = new HashMap<>();
+    void setColor(Color color){
+        this.color=color;
+    }
+    private Color getColor(){
+        return color;
+    }
     Game(ActionListener actionListener, String p1name,int gameSpeed, int enemyNumber,boolean hard){
         setSize(1000,1000);
         this.actionListener=actionListener;
@@ -50,7 +57,7 @@ public class Game extends JPanel {
         this.enemyNumber=enemyNumber;
         int[] speeds = {10, 8, 6,4,2};
         finalSpeed=speeds[gameSpeed-1];
-        players.add(mainPlayer=new MainPlayer(areaHeight, areaWidth, new Color(102,60,90), p1name));
+        players.add(mainPlayer=new MainPlayer(areaHeight, areaWidth,color, p1name));
         this.gameArea =  new Node[areaWidth][areaHeight];
         for(int i = 0; i < gameArea.length; i++) {
             for (int j = 0; j < gameArea[i].length; j++) {
@@ -85,7 +92,7 @@ public class Game extends JPanel {
         finalSpeed = speeds[gameSpeed - 1];
         this.hard=false;
 
-        players.add(mainPlayer=new MainPlayer(areaHeight, areaWidth, new Color(102,40,75), p1name));
+        players.add(mainPlayer=new MainPlayer(areaHeight, areaWidth,color, p1name));
 
 
 
@@ -585,6 +592,9 @@ public class Game extends JPanel {
                     }
                     }
                 }
+        String StringOwnedNodes= String.valueOf(nodesOwned);
+        checkNumber(nodesOwned);
+        //saveToFile("scoreFile.txt",StringOwnedNodes);
 
 
 
@@ -600,6 +610,40 @@ public class Game extends JPanel {
             g.setColor(Color.BLACK);
         }
         g.drawString(string, 2 + getWidth() - barWidth, fontHeight + 4);
+    }
+
+    private void checkNumber(int num) {
+        String filePath = "scoreFile.txt";
+        int newNumber = num; // Number to compare with the file content
+
+        try {
+            // Read the file contents
+            BufferedReader reader = new BufferedReader(new FileReader(filePath));
+            String fileContent = reader.readLine();
+            reader.close();
+
+            // Parse the file content as a number
+            int savedNumber = Integer.parseInt(fileContent);
+
+            // Compare the numbers
+            if (newNumber > savedNumber) {
+                // Update the file with the new number
+                FileWriter writer = new FileWriter(filePath);
+                writer.write(String.valueOf(newNumber));
+                writer.close();
+
+                System.out.println("New number saved successfully!");
+            } else {
+                System.out.println("The new number is not larger than the saved number.");
+            }
+
+        } catch (IOException e) {
+            System.err.println("An error occurred while reading or writing the file.");
+            e.printStackTrace();
+        } catch (NumberFormatException e) {
+            System.err.println("The file content is not a valid number.");
+            e.printStackTrace();
+        }
     }
 
     private void drawEnemyNum(Graphics g) {
@@ -811,6 +855,18 @@ public class Game extends JPanel {
 
         for(Node t : inside){
             player.setOwnedTiles(t);
+        }
+    }
+
+
+    public void saveToFile(String fileName, String data) {
+        try {
+            BufferedWriter writer = new BufferedWriter(new FileWriter(fileName));
+            writer.write(data);
+            writer.close();
+            System.out.println("Data saved to file: " + fileName);
+        } catch (IOException e) {
+            System.err.println("Error saving data to file: " + e.getMessage());
         }
     }
 

@@ -12,6 +12,7 @@ class PaintIo extends JFrame implements ActionListener{
     private JPanel panel;
     private Game gameScene;
     private MenuScene menuScene;
+    private setting settingScene;
     ActionListener actionListener;
 
 
@@ -62,6 +63,16 @@ class PaintIo extends JFrame implements ActionListener{
                 cardLayout.show(panel,"gameScene");
                 gameScene.setPaused(false);
                 break;
+            case "setting"  :
+                settingScene=new setting(this);
+                panel.add(settingScene,"settingScene");
+                cardLayout.show(panel,"settingScene");
+
+                break;
+            case "menu":
+                cardLayout.show(panel,"menuScene");
+                break;
+
             case "GAME OVER":
                 cardLayout.show(panel,"menuScene");
                 gameScene.setPaused(true);
