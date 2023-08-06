@@ -95,8 +95,5 @@ public class SmartEnemy extends Player {
         }, 5000);
     }
 
-    @Override
-    public int compareTo(Player o) {
-        return 0;
-    }
+
 }

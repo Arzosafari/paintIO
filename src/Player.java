@@ -1,7 +1,7 @@
 import java.awt.*;
 import java.util.ArrayList;
 
-public abstract class Player implements Comparable<Player> {//
+public abstract class Player  {//
     int x,y,dx,dy;
     public static final int NORTH = 0;
     public static final int EAST = 1;
@@ -83,8 +83,8 @@ public abstract class Player implements Comparable<Player> {//
         this.width = width;
         this.color = color;
 
-        this.lastX = x; // Initialize lastX to the same value as x
-        this.lastY = y; // Initialize lastY to the same value as y
+        this.lastX = x;
+        this.lastY = y;
     }
     public int getDirection() {
 
@@ -98,7 +98,7 @@ public abstract class Player implements Comparable<Player> {//
         } else if (dx == -1 && dy == 0) {
             return Player.WEST;
         } else {
-            // This should never happen, but just in case
+
             throw new IllegalStateException("Invalid player direction");
         }
     }

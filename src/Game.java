@@ -9,8 +9,6 @@ import java.util.TimerTask;
 import java.util.Timer;
 
 
-
-
 public class Game extends JPanel {
     private Node[][] gameArea;
     static Color color=new Color(102,60,90);
@@ -18,16 +16,13 @@ public class Game extends JPanel {
     private boolean canCallMethod = true;
     private Timer timer;
 
-    private int offsetX, offsetY;
-    private boolean isDragging;
-    private boolean isMoving;
     private int bullet=4;
-    private int destinationX, destinationY;
+
     private boolean hard;
 
     private ActionListener actionListener;
     MouseEvent e;
-    private Point lastDragPoint;
+
     private int areaHeight=500;
     private int areaWidth=500;
 
@@ -58,23 +53,16 @@ public class Game extends JPanel {
         int[] speeds = {10, 8, 6,4,2};
         finalSpeed=speeds[gameSpeed-1];
         players.add(mainPlayer=new MainPlayer(areaHeight, areaWidth,color, p1name));
-        this.gameArea =  new Node[areaWidth][areaHeight];
-        for(int i = 0; i < gameArea.length; i++) {
-            for (int j = 0; j < gameArea[i].length; j++) {
-                gameArea[i][j] = new Node(j, i);
-
-            }
-        }
-
-
+        gameBoard();
+        addButton();
         registerArrowKeyInputs();
         addSmartEnemy();
         setBackground(Color.PINK);
         timer();
+        addPausedButton();
+        addunpausedButton();
         painters.add(new Painter( this, mainPlayer, players));
         playerPainterHashMap.put(mainPlayer, painters.get(0));
-
-
 
 
     }
@@ -91,71 +79,66 @@ public class Game extends JPanel {
         int[] speeds = {12, 10, 8, 6, 4};
         finalSpeed = speeds[gameSpeed - 1];
         this.hard=false;
-
         players.add(mainPlayer=new MainPlayer(areaHeight, areaWidth,color, p1name));
+        gameBoard();
+        addButton();
+        timer();
+        movePlayerByMouse(mainPlayer);
+        registerArrowKeyInputs();
+        addNormalEnemy();
+        setBackground(Color.PINK);
+        addPausedButton();
+        addunpausedButton();
 
 
+        painters.add(new Painter( this, mainPlayer, players));
+        playerPainterHashMap.put(mainPlayer, painters.get(0));
+    }
+    private void addPausedButton(){
+        JButton button=new JButton("stop");
+        button.setBackground(new Color(102,20,80));
+        button.setFocusPainted(false);
+        button.setSize(80,30);
+        button.setForeground(Color.WHITE);
+        button.addActionListener(actionListener);
+        button.setFont(new Font("Arial",Font.BOLD,28));
+        add(button);
+        button.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+              setPaused(true);
+
+            }
+        });
+    }
+    private void addunpausedButton(){
+        JButton button=new JButton("resume");
+        button.setBackground(new Color(102,30,60));
+        button.setFocusPainted(false);
+        button.setSize(80,30);
+        button.setForeground(Color.WHITE);
+        button.addActionListener(actionListener);
+        button.setFont(new Font("Arial",Font.BOLD,28));
+        add(button);
+        button.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                setPaused(false);
+
+            }
+        });
 
 
-        this.gameArea =  new Node[500][500];
+    }
+    private void gameBoard(){
+        this.gameArea =  new Node[areaHeight][areaWidth];
         for(int i = 0; i < gameArea.length; i++) {
             for (int j = 0; j < gameArea[i].length; j++) {
                 gameArea[i][j] = new Node(j, i);
 
             }
 
-
-
         }
-        addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                if (!isMoving) {
-                    isMoving = true;
-                    destinationX = e.getX();
-                    destinationY = e.getY();
-
-                } else {
-                    isMoving = false;
-                }
-            }
-
-            @Override
-            public void mousePressed(MouseEvent e) {
-                if (mainPlayer.contains(e.getX(), e.getY())) {
-                    offsetX = e.getX() - mainPlayer.getX(); // Calculate offset for smooth dragging
-                    offsetY = e.getY() - mainPlayer.getY();
-                    isDragging = true;
-                }
-            }
-
-            @Override
-            public void mouseReleased(MouseEvent e) {
-                isDragging = false;
-            }
-        });
-
-        addMouseMotionListener(new MouseAdapter() {
-            @Override
-            public void mouseDragged(MouseEvent e) {
-                if (isDragging) {
-                    mainPlayer.setPosition(e.getX() - offsetX, e.getY() - offsetY);
-                    repaint(); // Trigger repaint to update the player position visually
-                }
-            }
-        });
-
-
-
-        timer();
-        movePlayerByMouse(mainPlayer);
-        registerArrowKeyInputs();
-        addNormalEnemy();
-        setBackground(Color.PINK);
-
-
-        painters.add(new Painter( this, mainPlayer, players));
-        playerPainterHashMap.put(mainPlayer, painters.get(0));
     }
 
 
@@ -216,75 +199,75 @@ public class Game extends JPanel {
         int x = currentPlayer.getX();
         int y = currentPlayer.getY();
         if(canCallMethod){
-        if(currentPlayer.getDirection()==Player.NORTH){
-            for(int i=y+1;i<=areaHeight;i++){
-                if(!hard){
-                   for(normalEnemy player:normalEnemies){
-                       if(player.getX()==x&&player.getY()==i){
-                           player.die();
-                           JPanel panel = new JPanel();
-                           panel.setBackground(Color.PINK);
+            if(currentPlayer.getDirection()==Player.NORTH){
+                for(int i=y+1;i<=areaHeight;i++){
+                    if(!hard){
+                        for(normalEnemy player:normalEnemies){
+                            if(player.getX()==x&&player.getY()==i){
+                                player.die();
+                                JPanel panel = new JPanel();
+                                panel.setBackground(Color.PINK);
 
-                           JOptionPane.showMessageDialog(this, panel, "you killed one enemy by weapon B", JOptionPane.PLAIN_MESSAGE);
+                                JOptionPane.showMessageDialog(this, panel, "you killed one enemy by weapon B", JOptionPane.PLAIN_MESSAGE);
 
-                       }
-
-                   }
-                }
-            }
-            canCallMethod=false;
-        }if(currentPlayer.getDirection()==Player.SOUTH){
-            for(int i=y+1;i>0;i--){
-                if(!hard){
-                    for(normalEnemy player:normalEnemies){
-                        if(player.getX()==x&&player.getY()==i){
-                            player.die();
-                            JPanel panel = new JPanel();
-                            panel.setBackground(Color.PINK);
-
-                            JOptionPane.showMessageDialog(this, panel, "you killed one enemy by weapon B", JOptionPane.PLAIN_MESSAGE);
+                            }
 
                         }
                     }
                 }
+                canCallMethod=false;
+            }if(currentPlayer.getDirection()==Player.SOUTH){
+                for(int i=y+1;i>0;i--){
+                    if(!hard){
+                        for(normalEnemy player:normalEnemies){
+                            if(player.getX()==x&&player.getY()==i){
+                                player.die();
+                                JPanel panel = new JPanel();
+                                panel.setBackground(Color.PINK);
 
-            }
-            canCallMethod=false;
-        }if(currentPlayer.getDirection()==Player.EAST){
-            for(int i=x+1;i<areaWidth;i++){
-                if(!hard){
-                    for(normalEnemy player:normalEnemies)
-                        if(player.getX()==i&&player.getY()==y){
-                            player.die();
-                            JPanel panel = new JPanel();
-                            panel.setBackground(Color.PINK);
+                                JOptionPane.showMessageDialog(this, panel, "you killed one enemy by weapon B", JOptionPane.PLAIN_MESSAGE);
 
-                            JOptionPane.showMessageDialog(this, panel, "you killed one enemy by weapon B", JOptionPane.PLAIN_MESSAGE);
-
-                        }
-                }
-            }
-            canCallMethod=false;
-        }
-        if(currentPlayer.getDirection()==Player.WEST){
-            for(int i=x+1;i<areaWidth;i++){
-                if(!hard){
-                    for (normalEnemy player:normalEnemies){
-                        if (player.getX()==i&&player.getY()==y){
-
-                            player.die();
-                            JPanel panel = new JPanel();
-                            panel.setBackground(Color.PINK);
-
-                            JOptionPane.showMessageDialog(this, panel, "you killed one enemy by weapon B", JOptionPane.PLAIN_MESSAGE);
-
+                            }
                         }
                     }
-                }
 
+                }
+                canCallMethod=false;
+            }if(currentPlayer.getDirection()==Player.EAST){
+                for(int i=x+1;i<areaWidth;i++){
+                    if(!hard){
+                        for(normalEnemy player:normalEnemies)
+                            if(player.getX()==i&&player.getY()==y){
+                                player.die();
+                                JPanel panel = new JPanel();
+                                panel.setBackground(Color.PINK);
+
+                                JOptionPane.showMessageDialog(this, panel, "you killed one enemy by weapon B", JOptionPane.PLAIN_MESSAGE);
+
+                            }
+                    }
+                }
+                canCallMethod=false;
             }
-        }
-        canCallMethod=false;
+            if(currentPlayer.getDirection()==Player.WEST){
+                for(int i=x+1;i<areaWidth;i++){
+                    if(!hard){
+                        for (normalEnemy player:normalEnemies){
+                            if (player.getX()==i&&player.getY()==y){
+
+                                player.die();
+                                JPanel panel = new JPanel();
+                                panel.setBackground(Color.PINK);
+
+                                JOptionPane.showMessageDialog(this, panel, "you killed one enemy by weapon B", JOptionPane.PLAIN_MESSAGE);
+
+                            }
+                        }
+                    }
+
+                }
+            }
+            canCallMethod=false;
         }
         else {
             JPanel panel = new JPanel();
@@ -295,21 +278,41 @@ public class Game extends JPanel {
         }
 
     }
+    private void addButton(){
+        JButton button=new JButton("EXIT");
+        button.setBackground(Color.MAGENTA);
+        button.setFocusPainted(false);
+        button.setSize(80,30);
+        button.setForeground(Color.WHITE);
+        button.addActionListener(actionListener);
+        button.setFont(new Font("Arial",Font.ITALIC,28));
+        add(button);
+        button.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                actionListener.actionPerformed(new ActionEvent(this, 0, "menu"));
+
+            }
+        });
+
+    }
+
+
 
     private void timer(){
-         Timer timer = new Timer();
-         TimerTask timerTask=new TimerTask() {
-             @Override
-             public void run() {
-                 if(!paused) {
-                     smooth();
-                     if (smooth == 0) {
-                         logic();
-                     }
-                     repaint();
-                 }
-             }
-         };
+        Timer timer = new Timer();
+        TimerTask timerTask=new TimerTask() {
+            @Override
+            public void run() {
+                if(!paused) {
+                    smooth();
+                    if (smooth == 0) {
+                        logic();
+                    }
+                    repaint();
+                }
+            }
+        };
         timer.scheduleAtFixedRate(timerTask,
                 0, 1000/60);
 
@@ -320,10 +323,10 @@ public class Game extends JPanel {
             int randG= (int) (Math.random() * 200);
             int randB= (int) (Math.random() * 200);
 
-                players.add(new normalEnemy(gameArea.length,gameArea[0].length,
-                        new Color(randR,randG,randB)));
-                normalEnemies.add(new normalEnemy(gameArea.length,gameArea[0].length,
-                        new Color(randR,randG,randB)));
+            players.add(new normalEnemy(gameArea.length,gameArea[0].length,
+                    new Color(randR,randG,randB)));
+            normalEnemies.add(new normalEnemy(gameArea.length,gameArea[0].length,
+                    new Color(randR,randG,randB)));
 
         }
 
@@ -382,7 +385,7 @@ public class Game extends JPanel {
         getActionMap().put("moveUP", new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                mainPlayer.setNextKey(KeyEvent.VK_UP);
+                mainPlayer.setDirection(KeyEvent.VK_UP);
             }
 
             @Override
@@ -400,7 +403,7 @@ public class Game extends JPanel {
         getActionMap().put("moveDOWN", new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                mainPlayer.setNextKey(KeyEvent.VK_DOWN);
+                mainPlayer.setDirection(KeyEvent.VK_DOWN);
             }
 
             @Override
@@ -418,7 +421,7 @@ public class Game extends JPanel {
         getActionMap().put("moveLEFT", new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                mainPlayer.setNextKey(KeyEvent.VK_LEFT);
+                mainPlayer.setDirection(KeyEvent.VK_LEFT);
             }
 
             @Override
@@ -436,7 +439,7 @@ public class Game extends JPanel {
         getActionMap().put("moveRIGHT", new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                mainPlayer.setNextKey(KeyEvent.VK_RIGHT);
+                mainPlayer.setDirection(KeyEvent.VK_RIGHT);
             }
 
             @Override
@@ -466,7 +469,7 @@ public class Game extends JPanel {
                 // Do nothing
             }
         });
-        getInputMap(WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_SPACE, 0), "weaponB");
+        getInputMap(WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_B, 0), "weaponB");
         getActionMap().put("weaponB", new AbstractAction() {
             @Override
             public void actionPerformed(ActionEvent e) {
@@ -487,7 +490,6 @@ public class Game extends JPanel {
 
 
     private void movePlayerByMouse(Player player) {
-        // Add a mouse listener to the game panel
         addMouseMotionListener(new MouseMotionAdapter() {
             public void mouseDragged(MouseEvent e) {
                 // Compute the distance and direction of the mouse drag
@@ -498,19 +500,19 @@ public class Game extends JPanel {
                 if (Math.abs(distX) > Math.abs(distY)) {
                     // Move left or right
                     if (distX < 0) {
-                        ((MainPlayer) player).setNextKey(KeyEvent.VK_LEFT);
+                        ((MainPlayer) player).setDirection(KeyEvent.VK_LEFT);
                         player.setX(player.getX() - finalSpeed);
                     } else {
-                        ((MainPlayer) player).setNextKey(KeyEvent.VK_RIGHT);
+                        ((MainPlayer) player).setDirection(KeyEvent.VK_RIGHT);
                         player.setX(player.getX() + finalSpeed);
                     }
                 } else {
                     // Move up or down
                     if (distY < 0) {
-                        ((MainPlayer) player).setNextKey(KeyEvent.VK_UP);
+                        ((MainPlayer) player).setDirection(KeyEvent.VK_UP);
                         player.setY(player.getY() - finalSpeed);
                     } else {
-                        ((MainPlayer) player).setNextKey(KeyEvent.VK_DOWN);
+                        ((MainPlayer) player).setDirection(KeyEvent.VK_DOWN);
                         player.setY(player.getY() + finalSpeed);
                     }
                 }
@@ -530,8 +532,8 @@ public class Game extends JPanel {
                 firstPlace(player2);
 
             }else{
-            Player player2 = new normalEnemy(gameArea.length,gameArea[0].length, player.getColor());
-            firstPlace(player2);}
+                Player player2 = new normalEnemy(gameArea.length,gameArea[0].length, player.getColor());
+                firstPlace(player2);}
         }
         for(int i = x-1; i <= x+1; i++){
             for(int j = y-1; j <= y+1; j++){
@@ -588,10 +590,10 @@ public class Game extends JPanel {
                 if (node.getOwner() == mainPlayer) {
                     nodesOwned++;}
                 else if (node.getContestedOwner() ==mainPlayer) {
-                        nodesContested++;
-                    }
-                    }
+                    nodesContested++;
                 }
+            }
+        }
         String StringOwnedNodes= String.valueOf(nodesOwned);
         checkNumber(nodesOwned);
         //saveToFile("scoreFile.txt",StringOwnedNodes);
@@ -699,6 +701,8 @@ public class Game extends JPanel {
                 for(int m=getAreaWidth();m<=mainPlayer.getX();m++){
                     for(int j=getAreaHeight();j<=mainPlayer.getY();j++){
                         gameArea[m][j]=new Node(m,j);
+                        areaWidth+=25;
+                        areaHeight+=25;
 
 
                     }
@@ -732,10 +736,10 @@ public class Game extends JPanel {
 
         boolean allKilled = true;
 
-            mainPlayer.updateDirection();
-            // Sets painter to stop drawing if humanPlayer is dead
-            playerPainterHashMap.get(mainPlayer).setDraw(mainPlayer.getAlive());
-            allKilled = allKilled && !mainPlayer.getAlive();
+        mainPlayer.updateDirection();
+        // Sets painter to stop drawing if humanPlayer is dead
+        playerPainterHashMap.get(mainPlayer).setDraw(mainPlayer.getAlive());
+        allKilled = allKilled && !mainPlayer.getAlive();
 
         if (allKilled) {
             endGame();
@@ -752,7 +756,7 @@ public class Game extends JPanel {
         panel.setBackground(Color.PINK);
 
         JOptionPane.showMessageDialog(this, panel, "YOU LOST!, GAME OVER...", JOptionPane.PLAIN_MESSAGE);
-         actionListener.actionPerformed(new ActionEvent(this, 0, "GAME OVER"));
+        actionListener.actionPerformed(new ActionEvent(this, 0, "GAME OVER"));
     }
 
 
@@ -877,17 +881,6 @@ public class Game extends JPanel {
         }
     }
 
-
-    public void saveToFile(String fileName, String data) {
-        try {
-            BufferedWriter writer = new BufferedWriter(new FileWriter(fileName));
-            writer.write(data);
-            writer.close();
-            System.out.println("Data saved to file: " + fileName);
-        } catch (IOException e) {
-            System.err.println("Error saving data to file: " + e.getMessage());
-        }
-    }
 
 
     void setPaused(Boolean b){

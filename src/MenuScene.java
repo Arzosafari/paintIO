@@ -19,12 +19,6 @@ public class MenuScene extends JPanel {
         return playerName.getText();
     }
 
-    public int getAreaHeight() {
-        return 500;
-    }
-    public int getAreaWidth() {
-        return 500;
-    }
     public int getGameSpeed(){
         return Integer.valueOf(((JTextField)Speed.getEditor().getComponent(0)).getText());
     }
@@ -36,7 +30,6 @@ public class MenuScene extends JPanel {
         this.actionListener=actionListener;
         musicPlayer=new MusicPlayer();
         musicPlayer.play();
-
         GridLayout gridLayout=new GridLayout(14,1);
         setLayout(gridLayout);
         setBackground(new Color(100,20,70));

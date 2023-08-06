@@ -7,43 +7,13 @@ import java.util.TimerTask;
 
 
 class normalEnemy extends Player{
-
-
-
-
-
-
-
     normalEnemy(int height, int width, Color color){
         super(height, width, color);
         this.nameOfPlayer = "ENEMY";
         double rand = Math.random();
-        if (rand < 0.25) {
-            dx = 1;
-            dy = 0;
-        } else if (rand <1) {
-            dx = -1;
-            dy = 0;
-        } else if (rand < 0.75) {
-            dx = 0;
-            dy = 1;
-        } else {
-            dx = 0;
-            dy = -1;
-        }
-        x = (int)(Math.random() * (width- 2) +1);
-        y = (int)(Math.random() * (height- 2) +1);
+        randomMove(rand);
+        randomPosition();
 
-        if(x<5){
-            x+= 5;
-        }else if(x >(width -5)){
-            x-= 5;
-        }
-        if(y < 5){
-            y+= 5;
-        }else if(y > (height- 5)){
-            y -= 5;
-        }
     }
 
     @Override
@@ -128,9 +98,36 @@ class normalEnemy extends Player{
             }
         },5000);
     }
-
-    @Override
-    public int compareTo(Player o) {
-        return 0;
+    private void randomMove(double rand){
+        if (rand < 0.25) {
+            dx = 1;
+            dy = 0;
+        } else if (rand <0.5) {
+            dx = -1;
+            dy = 0;
+        } else if (rand < 0.75) {
+            dx = 0;
+            dy = 1;
+        } else {
+            dx = 0;
+            dy = -1;
+        }
     }
+    private void randomPosition(){
+        x = (int)(Math.random() * (width- 2) +1);
+        y = (int)(Math.random() * (height- 2) +1);
+
+        if(x<5){
+            x+= 5;
+        }else if(x >(width -5)){
+            x-= 5;
+        }
+        if(y < 5){
+            y+= 5;
+        }else if(y > (height- 5)){
+            y -= 5;
+        }
+    }
+
+
 }
